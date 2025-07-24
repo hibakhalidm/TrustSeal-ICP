@@ -48,7 +48,7 @@ sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/hibakhalidm/TrustSeal-ICP.git>
 cd trustseal-icp
 ```
 

@@ -5,13 +5,22 @@ This folder contains demo screenshots of the TrustSeal ICP dApp.
 ## Recommended Screenshots to Capture:
 
 1. **homepage.png** - Landing page with connection prompt
-2. **connected.png** - Dashboard after Internet Identity authentication
-3. **mint-form.png** - Credential minting form
-4. **mint-success.png** - Successful credential minting with Token ID
-5. **view-credentials.png** - User's credential dashboard
-6. **verify-form.png** - Credential verification input
-7. **verify-result.png** - Verification result display
-8. **public-registry.png** - Public credential registry
+![alt text](<Screenshot (1041).png>)
+
+2. **admin-login.png** - Admin login screen
+
+3. **admin-dashboard.png** - Admin dashboard with user management and stats
+4. **issuer-registration.png** - Issuer registration form
+5. **issuer-dashboard.png** - Issuer dashboard with credential issuance
+6. **mint-form.png** - Credential minting form
+7. **mint-success.png** - Successful credential minting with Token ID
+8. **student-dashboard.png** - Student view of owned credentials
+9. **checker-registration.png** - Checker registration form
+10. **checker-dashboard.png** - Checker dashboard with verification tools
+11. **verify-form.png** - Credential verification input
+12. **verify-result.png** - Verification result display
+13. **public-registry.png** - Public credential registry (if available)
+
 
 ## Instructions:
 
@@ -23,9 +32,3 @@ This folder contains demo screenshots of the TrustSeal ICP dApp.
 
 ## For Demo Video:
 
-Record a 3-5 minute screen recording going through:
-- Authentication
-- Minting a credential
-- Viewing credentials
-- Verifying a credential
-- Explaining the blockchain benefits

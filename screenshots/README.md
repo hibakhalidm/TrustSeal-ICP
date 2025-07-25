@@ -8,18 +8,20 @@ This folder contains demo screenshots of the TrustSeal ICP dApp.
 ![alt text](<Screenshot (1041).png>)
 
 2. **admin-login.png** - Admin login screen
-
+![alt text](<Screenshot (1056).png>)
 3. **admin-dashboard.png** - Admin dashboard with user management and stats
-4. **issuer-registration.png** - Issuer registration form
-5. **issuer-dashboard.png** - Issuer dashboard with credential issuance
-6. **mint-form.png** - Credential minting form
-7. **mint-success.png** - Successful credential minting with Token ID
-8. **student-dashboard.png** - Student view of owned credentials
-9. **checker-registration.png** - Checker registration form
-10. **checker-dashboard.png** - Checker dashboard with verification tools
-11. **verify-form.png** - Credential verification input
-12. **verify-result.png** - Verification result display
-13. **public-registry.png** - Public credential registry (if available)
+![alt text](<Screenshot (1057).png>)
+![alt text](<Screenshot (1058).png>)
+
+4. **issuer-dashboard.png** - Issuer dashboard with credential issuance
+![alt text](<Screenshot (1059).png>)
+![alt text](<Screenshot (1060).png>)
+![alt text](<Screenshot (1061).png>)
+
+
+5. **checker-dashboard.png** - Checker dashboard with verification tools
+![alt text](<Screenshot (1062).png>)
+
 
 
 ## Instructions:

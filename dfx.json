@@ -8,7 +8,6 @@
     "trustseal_frontend": {
       "type": "assets",
       "source": [
-        "src/trustseal_frontend/assets",
         "dist/"
       ]
     }

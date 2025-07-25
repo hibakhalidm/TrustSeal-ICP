@@ -9,7 +9,13 @@
     "deploy:local": "dfx deploy --network local",
     "deploy:ic": "dfx deploy --network ic"
   },
-  "keywords": ["icp", "dfinity", "nft", "credentials", "blockchain"],
+  "keywords": [
+    "icp",
+    "dfinity",
+    "nft",
+    "credentials",
+    "blockchain"
+  ],
   "author": "TrustSeal Team",
   "license": "MIT",
   "devDependencies": {
@@ -17,18 +23,18 @@
     "@dfinity/auth-client": "^0.19.3",
     "@dfinity/candid": "^0.19.3",
     "@dfinity/principal": "^0.19.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "css-loader": "^6.8.1",
+    "html-webpack-plugin": "^5.5.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "style-loader": "^3.3.3",
+    "ts-loader": "^9.4.4",
     "typescript": "^5.0.4",
     "webpack": "^5.88.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.1",
-    "html-webpack-plugin": "^5.5.3",
-    "ts-loader": "^9.4.4",
-    "css-loader": "^6.8.1",
-    "style-loader": "^3.3.3"
+    "webpack-dev-server": "^5.2.2"
   },
   "dependencies": {
     "@dfinity/agent": "^0.19.3",

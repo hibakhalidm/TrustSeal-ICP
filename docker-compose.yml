@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # Spring Boot API Service
+  api-service:
+    build:
+      context: ./backend-api
+      dockerfile: Dockerfile
+    container_name: trustseal-api-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - WORKER_SERVICE_URL=http://worker-service:3001
+    depends_on:
+      worker-service:
+        condition: service_healthy
+    networks:
+      - trustseal-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Node.js Credential Worker Service
+  worker-service:
+    build:
+      context: ./backend-worker
+      dockerfile: Dockerfile
+    container_name: trustseal-worker-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    networks:
+      - trustseal-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: trustseal-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - API_BASE_URL=http://localhost:8080
+      - WORKER_SERVICE_URL=http://localhost:3001
+    depends_on:
+      - api-service
+      - worker-service
+    networks:
+      - trustseal-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  trustseal-network:
+    driver: bridge
+
+volumes:
+  # H2 database data (for demo purposes)
+  api-data:

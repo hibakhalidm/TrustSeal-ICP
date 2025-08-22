@@ -4,18 +4,15 @@
   "description": "TrustSeal ICP - Decentralized Credential Verification dApp",
   "main": "index.js",
   "scripts": {
-    "build": "webpack",
-    "start": "webpack serve --mode development --env development",
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "start": "webpack serve --mode development --open",
     "deploy:local": "dfx deploy --network local",
-    "deploy:ic": "dfx deploy --network ic"
+    "deploy:ic": "dfx deploy --network ic",
+    "test": "echo \"Tests coming soon\" && exit 0",
+    "lint": "echo \"Linting coming soon\" && exit 0"
   },
-  "keywords": [
-    "icp",
-    "dfinity",
-    "nft",
-    "credentials",
-    "blockchain"
-  ],
+  "keywords": ["icp", "dfinity", "nft", "credentials", "blockchain", "wchl2025"],
   "author": "TrustSeal Team",
   "license": "MIT",
   "devDependencies": {

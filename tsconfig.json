@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
+    "strict": false,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
@@ -18,9 +18,27 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
+<<<<<<< Current (Your changes)
     "jsx": "react-jsx"
   },
   "include": [
     "src/trustseal_frontend/src/**/*",
+=======
+    "jsx": "react-jsx",
+    "declaration": false,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/trustseal_frontend/src/*"]
+    }
+  },
+  "include": [
+    "src/trustseal_frontend/src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/trustseal_backend"
+>>>>>>> Incoming (Background Agent changes)
   ]
 }

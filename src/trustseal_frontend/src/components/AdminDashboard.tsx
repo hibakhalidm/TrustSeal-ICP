@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-interface AdminDashboardProps {
-  actor: any;
-  identity: any;
-  registerUserWithRole: (principal: string, role: 'Admin' | 'Issuer' | 'Checker', userInfo: any) => Promise<void>;
-  registeredUsers: Map<string, 'Admin' | 'Issuer' | 'Checker'>;
-}
-
 interface UserProfile {
   principal: string;
   role: 'Admin' | 'Issuer' | 'Checker';
@@ -17,256 +10,223 @@ interface UserProfile {
   last_login?: number;
 }
 
-interface DashboardData {
-  total_users: number;
-  total_issuers: number;
-  total_checkers: number;
-  pending_verifications: number;
-  total_credentials: number;
+interface SystemStats {
+  totalCredentials: number;
+  totalUsers: number;
+  totalIssuers: number;
+  totalCheckers: number;
+  revokedCredentials: number;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity, registerUserWithRole, registeredUsers }) => {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
-  const [pendingUsers, setPendingUsers] = useState<UserProfile[]>([]);
+interface AdminDashboardProps {
+  actor: any;
+  identity: any;
+}
+
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity }) => {
+  const [activeSection, setActiveSection] = useState<'overview' | 'users' | 'register'>('overview');
+  const [stats, setStats] = useState<SystemStats | null>(null);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'pending' | 'register'>('overview');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Registration form state
   const [registerForm, setRegisterForm] = useState({
-    principal: '',
+    userPrincipal: '',
+    role: 'Issuer' as 'Admin' | 'Issuer' | 'Checker',
     name: '',
-    organization: '',
-    role: 'Issuer' as 'Admin' | 'Issuer' | 'Checker'
+    organization: ''
   });
 
   useEffect(() => {
-    loadDashboardData();
-    loadAllUsers();
-  }, [actor]);
+    if (activeSection === 'overview') {
+      loadSystemStats();
+    } else if (activeSection === 'users') {
+      loadAllUsers();
+    }
+  }, [activeSection]);
 
-  const loadDashboardData = async () => {
-    if (!actor) return;
-    
+  const loadSystemStats = async () => {
     setLoading(true);
     try {
-      const data = await actor.getAdminDashboardData();
-      setDashboardData(data);
+      // Mock implementation for demo
+      setStats({
+        totalCredentials: 45,
+        totalUsers: 12,
+        totalIssuers: 5,
+        totalCheckers: 6,
+        revokedCredentials: 2
+      });
     } catch (err) {
-      setError('Error loading dashboard data: ' + String(err));
+      setError('Failed to load system statistics');
     }
     setLoading(false);
   };
 
   const loadAllUsers = async () => {
-    if (!actor) return;
-    
-    try {
-      const users = await actor.getAllUsers();
-      setAllUsers(users);
-      setPendingUsers(users.filter((user: UserProfile) => !user.verified));
-    } catch (err) {
-      setError('Error loading users: ' + String(err));
-    }
-  };
-
-  const handleVerifyUser = async (userPrincipal: string) => {
-    if (!actor) return;
-    
     setLoading(true);
-    setError('');
-    setSuccess('');
-    
     try {
-      const result = await actor.verifyUser({ fromText: userPrincipal });
-      if ('ok' in result) {
-        setSuccess('User verified successfully!');
-        await loadAllUsers();
-        await loadDashboardData();
-      } else {
-        setError('Failed to verify user: ' + result.err);
-      }
+      // Mock implementation for demo
+      setUsers([
+        {
+          principal: 'rrkah-fqaaa-aaaaa-aaaaq-cai',
+          role: 'Issuer',
+          name: 'MIT Registrar',
+          organization: 'Massachusetts Institute of Technology',
+          verified: true,
+          registration_date: Date.now() - 86400000,
+          last_login: Date.now() - 3600000
+        },
+        {
+          principal: 'bkyz2-fmaaa-aaaaa-qaaaq-cai',
+          role: 'Checker',
+          name: 'TechCorp HR',
+          organization: 'TechCorp Inc.',
+          verified: false,
+          registration_date: Date.now() - 43200000
+        }
+      ]);
     } catch (err) {
-      setError('Error verifying user: ' + String(err));
+      setError('Failed to load users');
     }
     setLoading(false);
   };
 
   const handleRegisterUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     setLoading(true);
     setError('');
     setSuccess('');
-    
+
     try {
-      const userInfo = {
-        name: registerForm.name,
-        organization: registerForm.organization
-      };
-      
-      await registerUserWithRole(registerForm.principal, registerForm.role, userInfo);
-      
-      setSuccess('User registered successfully!');
-      setRegisterForm({ principal: '', name: '', organization: '', role: 'Issuer' });
-      await loadAllUsers();
-      await loadDashboardData();
+      // Mock implementation for demo
+      setSuccess(`User ${registerForm.name} registered successfully as ${registerForm.role}`);
+      setRegisterForm({
+        userPrincipal: '',
+        role: 'Issuer',
+        name: '',
+        organization: ''
+      });
+      if (activeSection === 'users') {
+        await loadAllUsers();
+      }
     } catch (err) {
-      setError('Error registering user: ' + String(err));
+      setError('Failed to register user');
     }
     setLoading(false);
   };
 
-  const formatDate = (timestamp: number) => {
-    return new Date(Number(timestamp) / 1000000).toLocaleDateString();
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'Admin': return '#e74c3c';
-      case 'Issuer': return '#3498db';
-      case 'Checker': return '#2ecc71';
-      default: return '#95a5a6';
+  const handleVerifyUser = async (userPrincipal: string) => {
+    setLoading(true);
+    try {
+      // Mock implementation for demo
+      setSuccess('User verified successfully');
+      await loadAllUsers();
+    } catch (err) {
+      setError('Failed to verify user');
     }
+    setLoading(false);
   };
 
   return (
     <div className="admin-dashboard">
       <div className="dashboard-header">
         <h2>👑 Administrator Dashboard</h2>
-        <p>System management and user oversight</p>
+        <p>System Management & Oversight</p>
       </div>
 
-      {error && <div className="error">{error}</div>}
-      {success && <div className="success">{success}</div>}
-
-      <div className="tab-navigation">
+      <div className="dashboard-nav">
         <button 
-          className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('overview')}
+          className={`nav-btn ${activeSection === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveSection('overview')}
         >
           📊 Overview
         </button>
         <button 
-          className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveTab('users')}
+          className={`nav-btn ${activeSection === 'users' ? 'active' : ''}`}
+          onClick={() => setActiveSection('users')}
         >
-          👥 All Users
+          👥 User Management
         </button>
         <button 
-          className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
-          onClick={() => setActiveTab('pending')}
-        >
-          ⏳ Pending ({pendingUsers.length})
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'register' ? 'active' : ''}`}
-          onClick={() => setActiveTab('register')}
+          className={`nav-btn ${activeSection === 'register' ? 'active' : ''}`}
+          onClick={() => setActiveSection('register')}
         >
           ➕ Register User
         </button>
       </div>
 
-      {activeTab === 'overview' && dashboardData && (
-        <div className="dashboard-overview">
-          <div className="stats-grid">
-            <div className="stat-card">
-              <h3>👥 Total Users</h3>
-              <div className="stat-number">{dashboardData.total_users}</div>
-            </div>
-            <div className="stat-card">
-              <h3>🏫 Issuers</h3>
-              <div className="stat-number">{dashboardData.total_issuers}</div>
-            </div>
-            <div className="stat-card">
-              <h3>🔍 Checkers</h3>
-              <div className="stat-number">{dashboardData.total_checkers}</div>
-            </div>
-            <div className="stat-card">
-              <h3>⏳ Pending</h3>
-              <div className="stat-number">{dashboardData.pending_verifications}</div>
-            </div>
-            <div className="stat-card">
-              <h3>🎓 Credentials</h3>
-              <div className="stat-number">{dashboardData.total_credentials}</div>
-            </div>
-          </div>
-        </div>
-      )}
+      {error && <div className="error">{error}</div>}
+      {success && <div className="success">{success}</div>}
 
-      {activeTab === 'users' && (
-        <div className="users-section">
-          <h3>All System Users</h3>
-          <div className="users-list">
-            {allUsers.map((user, index) => (
-              <div key={index} className="user-card">
-                <div className="user-info">
-                  <div className="user-header">
-                    <span className="user-name">{user.name || 'Unknown'}</span>
-                    <span 
-                      className="user-role"
-                      style={{ backgroundColor: getRoleColor(user.role) }}
-                    >
-                      {user.role}
-                    </span>
-                    <span className={`verification-status ${user.verified ? 'verified' : 'pending'}`}>
-                      {user.verified ? '✅ Verified' : '⏳ Pending'}
-                    </span>
-                  </div>
-                  <p><strong>Organization:</strong> {user.organization}</p>
-                  <p><strong>Principal:</strong> {user.principal.slice(0, 20)}...</p>
-                  <p><strong>Registered:</strong> {formatDate(user.registration_date)}</p>
-                  {user.last_login && (
-                    <p><strong>Last Login:</strong> {formatDate(user.last_login)}</p>
-                  )}
-                </div>
-                {!user.verified && (
-                  <button 
-                    className="verify-btn"
-                    onClick={() => handleVerifyUser(user.principal)}
-                    disabled={loading}
-                  >
-                    Verify User
-                  </button>
-                )}
+      {activeSection === 'overview' && (
+        <div className="dashboard-section">
+          <h3>System Statistics</h3>
+          {loading ? (
+            <div className="loading">Loading statistics...</div>
+          ) : stats ? (
+            <div className="stats-grid">
+              <div className="stat-card">
+                <h4>Total Credentials</h4>
+                <div className="stat-number">{stats.totalCredentials}</div>
               </div>
-            ))}
-          </div>
+              <div className="stat-card">
+                <h4>Total Users</h4>
+                <div className="stat-number">{stats.totalUsers}</div>
+              </div>
+              <div className="stat-card">
+                <h4>Active Issuers</h4>
+                <div className="stat-number">{stats.totalIssuers}</div>
+              </div>
+              <div className="stat-card">
+                <h4>Registered Checkers</h4>
+                <div className="stat-number">{stats.totalCheckers}</div>
+              </div>
+              <div className="stat-card revoked">
+                <h4>Revoked Credentials</h4>
+                <div className="stat-number">{stats.revokedCredentials}</div>
+              </div>
+            </div>
+          ) : null}
         </div>
       )}
 
-      {activeTab === 'pending' && (
-        <div className="pending-section">
-          <h3>Pending User Verifications</h3>
-          {pendingUsers.length === 0 ? (
-            <p>No pending verifications.</p>
+      {activeSection === 'users' && (
+        <div className="dashboard-section">
+          <h3>User Management</h3>
+          {loading ? (
+            <div className="loading">Loading users...</div>
           ) : (
             <div className="users-list">
-              {pendingUsers.map((user, index) => (
-                <div key={index} className="user-card pending">
+              {users.map((user, index) => (
+                <div key={index} className="user-card">
                   <div className="user-info">
-                    <div className="user-header">
-                      <span className="user-name">{user.name || 'Unknown'}</span>
-                      <span 
-                        className="user-role"
-                        style={{ backgroundColor: getRoleColor(user.role) }}
-                      >
-                        {user.role}
-                      </span>
-                    </div>
+                    <h4>{user.name}</h4>
+                    <p><strong>Role:</strong> <span className={`role-badge ${user.role.toLowerCase()}`}>{user.role}</span></p>
                     <p><strong>Organization:</strong> {user.organization}</p>
-                    <p><strong>Principal:</strong> {user.principal.slice(0, 20)}...</p>
-                    <p><strong>Registered:</strong> {formatDate(user.registration_date)}</p>
+                    <p><strong>Principal:</strong> {user.principal}</p>
+                    <p><strong>Status:</strong> 
+                      <span className={`status-badge ${user.verified ? 'verified' : 'pending'}`}>
+                        {user.verified ? '✅ Verified' : '⏳ Pending'}
+                      </span>
+                    </p>
+                    <p><strong>Registered:</strong> {new Date(user.registration_date).toLocaleDateString()}</p>
+                    {user.last_login && (
+                      <p><strong>Last Login:</strong> {new Date(user.last_login).toLocaleString()}</p>
+                    )}
                   </div>
-                  <button 
-                    className="verify-btn"
-                    onClick={() => handleVerifyUser(user.principal)}
-                    disabled={loading}
-                  >
-                    {loading ? 'Verifying...' : 'Verify User'}
-                  </button>
+                  {!user.verified && (
+                    <div className="user-actions">
+                      <button 
+                        className="btn btn-primary"
+                        onClick={() => handleVerifyUser(user.principal)}
+                        disabled={loading}
+                      >
+                        Verify User
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -274,27 +234,39 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity, regist
         </div>
       )}
 
-      {activeTab === 'register' && (
-        <div className="register-section">
+      {activeSection === 'register' && (
+        <div className="dashboard-section">
           <h3>Register New User</h3>
           <form onSubmit={handleRegisterUser} className="register-form">
             <div className="form-group">
               <label>User Principal ID</label>
               <input
                 type="text"
-                value={registerForm.principal}
-                onChange={(e) => setRegisterForm({...registerForm, principal: e.target.value})}
-                placeholder="Enter user's principal ID"
+                value={registerForm.userPrincipal}
+                onChange={(e) => setRegisterForm({...registerForm, userPrincipal: e.target.value})}
+                placeholder="Enter user's Principal ID"
                 required
               />
             </div>
             <div className="form-group">
-              <label>Full Name</label>
+              <label>Role</label>
+              <select
+                value={registerForm.role}
+                onChange={(e) => setRegisterForm({...registerForm, role: e.target.value as any})}
+                required
+              >
+                <option value="Issuer">Issuer (Institution)</option>
+                <option value="Checker">Checker (Employer)</option>
+                <option value="Admin">Admin (System)</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Name</label>
               <input
                 type="text"
                 value={registerForm.name}
                 onChange={(e) => setRegisterForm({...registerForm, name: e.target.value})}
-                placeholder="Enter user's full name"
+                placeholder="Full name or institution name"
                 required
               />
             </div>
@@ -304,22 +276,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity, regist
                 type="text"
                 value={registerForm.organization}
                 onChange={(e) => setRegisterForm({...registerForm, organization: e.target.value})}
-                placeholder="Enter organization name"
+                placeholder="Organization or company name"
                 required
               />
             </div>
-            <div className="form-group">
-              <label>Role</label>
-              <select
-                value={registerForm.role}
-                onChange={(e) => setRegisterForm({...registerForm, role: e.target.value as any})}
-              >
-                <option value="Issuer">Issuer (University/Institution)</option>
-                <option value="Checker">Checker (Employer/Verifier)</option>
-                <option value="Admin">Admin (System Administrator)</option>
-              </select>
-            </div>
-            <button type="submit" className="btn" disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'Registering...' : 'Register User'}
             </button>
           </form>

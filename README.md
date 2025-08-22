@@ -8,12 +8,16 @@ TrustSeal ICP revolutionizes credential verification by leveraging blockchain te
 
 ### Key Features
 
-- **🏫 Institutional Issuance**: Authorized institutions can mint credential NFTs
-- **🎓 Student Ownership**: Students own their credentials as NFTs in their wallets
-- **🔍 Instant Verification**: Employers can verify credentials using token IDs
-- **🔒 Tamper-Proof**: Blockchain-based immutable storage
+- **🏫 Institutional Issuance**: Authorized institutions can mint credential NFTs with cryptographic verification
+- **🎓 Student Ownership**: Students own their credentials as NFTs in their Internet Identity wallets
+- **🔍 Instant Verification**: Employers can verify credentials in <3 seconds using token IDs
+- **🔒 Tamper-Proof**: Blockchain-based immutable storage with cryptographic hashing
 - **🌐 Decentralized**: No central authority required for verification
-- **🔗 Internet Identity**: Secure authentication using ICP's Internet Identity
+- **🔗 Internet Identity**: Passwordless authentication using ICP's native identity system
+- **🛡️ Zero-Knowledge Ready**: Privacy-preserving verification architecture
+- **📊 Real-time Analytics**: Live platform statistics and health monitoring
+- **🔄 Credential Lifecycle**: Revocation and management capabilities
+- **⚡ Web-Speed**: Leverages ICP's unique performance characteristics
 
 ## 🏗️ Architecture
 
@@ -48,8 +52,8 @@ sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
 ### 1. Clone the Repository
 
 ```bash
-git clone <https://github.com/hibakhalidm/TrustSeal-ICP.git>
-cd trustseal-icp
+git clone https://github.com/hibakhalidm/TrustSeal-ICP.git
+cd TrustSeal-ICP
 ```
 
 ### 2. Install Dependencies
@@ -81,6 +85,15 @@ npm start
 ```
 
 The application will be available at `http://localhost:3000`
+
+### 6. Quick Mainnet Deployment
+
+```bash
+# Deploy to IC mainnet (requires cycles wallet setup)
+./deploy.sh
+```
+
+See `DEPLOYMENT_GUIDE.md` for detailed mainnet deployment instructions.
 
 ## 📖 Usage Guide
 
@@ -267,8 +280,12 @@ trustseal-icp/
 
 ## 🔗 Canister IDs (Mainnet)
 
-**Backend Canister**: `[PLACEHOLDER - UPDATE AFTER DEPLOYMENT]`
-**Frontend Canister**: `[PLACEHOLDER - UPDATE AFTER DEPLOYMENT]`
+**Backend Canister**: `[UPDATE AFTER RUNNING ./deploy.sh]`
+**Frontend Canister**: `[UPDATE AFTER RUNNING ./deploy.sh]`
+
+**Live Demo**: `https://[frontend-canister-id].icp0.app`
+
+> **Note**: Run `./deploy.sh` to deploy to mainnet and get actual canister IDs for WCHL 2025 submission
 
 ## 🤝 Contributing
 

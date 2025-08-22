@@ -21,6 +21,13 @@ TrustSeal ICP provides a complete decentralized credential ecosystem:
 
 This solution eliminates traditional verification delays, reduces costs, prevents fraud, and preserves privacy.
 
+## 🎥 Project Videos
+
+### 📽️ [**Pitch Video**](https://youtu.be/EdLl3TSwqAE)
+Watch our comprehensive project pitch showcasing TrustSeal ICP's vision, architecture, and impact on decentralized credential verification.
+
+### 🎮 [**Demo Video**](https://youtu.be/kE9qLeYLnGo)
+See TrustSeal ICP in action with a complete walkthrough of all user roles, features, and real-time verification capabilities.
 ## 🏗️ Architecture
 
 TrustSeal ICP uses a clean, ICP-native architecture optimized for production deployment:
@@ -317,3 +324,4 @@ dfx canister --network ic id trustseal_frontend
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+

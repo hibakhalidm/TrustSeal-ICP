@@ -1,3 +1,13 @@
+/**
+ * TrustSeal ICP Frontend Application
+ * 
+ * Main application component that handles authentication, user role management,
+ * and renders role-specific dashboards for Admin, Issuer, and Checker users.
+ * 
+ * @author TrustSeal Team
+ * @version 1.0.0 - WCHL 2025 Submission
+ */
+
 import React, { useState, useEffect } from 'react';
 import { AuthClient } from '@dfinity/auth-client';
 import { Actor, HttpAgent } from '@dfinity/agent';

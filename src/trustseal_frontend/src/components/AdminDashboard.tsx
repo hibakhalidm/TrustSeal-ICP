@@ -1,4 +1,15 @@
+/**
+ * Admin Dashboard Component
+ * 
+ * Provides administrative functionality including user management,
+ * system statistics, and user verification workflows.
+ * 
+ * @author TrustSeal Team
+ */
+
 import React, { useState, useEffect } from 'react';
+import { useNotifications } from '../hooks/useNotifications';
+import NotificationSystem from './NotificationSystem';
 
 interface UserProfile {
   principal: string;
@@ -28,8 +39,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity }) => {
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  
+  // Enhanced notification system
+  const { 
+    notifications, 
+    dismissNotification, 
+    showSuccess, 
+    showError, 
+    showWarning 
+  } = useNotifications();
 
   // Registration form state
   const [registerForm, setRegisterForm] = useState({
@@ -49,25 +67,61 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity }) => {
 
   const loadSystemStats = async () => {
     setLoading(true);
+    
     try {
-      // Mock implementation for demo
+      if (!actor) {
+        throw new Error('Actor not initialized');
+      }
+
+      // Call real backend API
+      const result = await actor.getSystemStats();
+      
+      if ('ok' in result) {
+        setStats(result.ok);
+        showSuccess('System statistics loaded successfully');
+      } else {
+        throw new Error(result.err || 'Failed to load system statistics');
+      }
+    } catch (err: any) {
+      console.error('Error loading system stats:', err);
+      showError(err.message || 'Failed to load system statistics');
+      
+      // Fallback to demo data for presentation purposes
       setStats({
-        totalCredentials: 45,
-        totalUsers: 12,
-        totalIssuers: 5,
-        totalCheckers: 6,
-        revokedCredentials: 2
+        totalCredentials: 156,
+        totalUsers: 23,
+        totalIssuers: 8,
+        totalCheckers: 12,
+        revokedCredentials: 3
       });
-    } catch (err) {
-      setError('Failed to load system statistics');
+      showWarning('Using demo data for presentation');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const loadAllUsers = async () => {
     setLoading(true);
+    
     try {
-      // Mock implementation for demo
+      if (!actor) {
+        throw new Error('Actor not initialized');
+      }
+
+      // Call real backend API
+      const result = await actor.getAllUsers();
+      
+      if ('ok' in result) {
+        setUsers(result.ok);
+        showSuccess(`Loaded ${result.ok.length} users successfully`);
+      } else {
+        throw new Error(result.err || 'Failed to load users');
+      }
+    } catch (err: any) {
+      console.error('Error loading users:', err);
+      showError(err.message || 'Failed to load users');
+      
+      // Fallback to demo data for presentation
       setUsers([
         {
           principal: 'rrkah-fqaaa-aaaaa-aaaaq-cai',
@@ -87,10 +141,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity }) => {
           registration_date: Date.now() - 43200000
         }
       ]);
-    } catch (err) {
-      setError('Failed to load users');
+      showWarning('Using demo data for presentation');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleRegisterUser = async (e: React.FormEvent) => {
@@ -286,6 +340,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity }) => {
           </form>
         </div>
       )}
+      
+      {/* Notification System */}
+      <NotificationSystem
+        notifications={notifications}
+        onDismiss={dismissNotification}
+      />
     </div>
   );
 };

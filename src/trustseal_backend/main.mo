@@ -1,3 +1,19 @@
+/**
+ * TrustSeal ICP Backend Canister
+ * 
+ * A decentralized credential verification system built on Internet Computer Protocol (ICP).
+ * Implements role-based access control (RBAC) for secure credential management.
+ * 
+ * Features:
+ * - NFT-based digital credentials (DIP721 compliant)
+ * - Role-based user management (Admin, Issuer, Checker)
+ * - Credential issuance, verification, and revocation
+ * - Audit trails and system statistics
+ * 
+ * @author TrustSeal Team
+ * @version 1.0.0 - WCHL 2025 Submission
+ */
+
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
 import Text "mo:base/Text";
@@ -10,8 +26,10 @@ import Option "mo:base/Option";
 
 actor TrustSealBackend {
 
-  // Types based on DIP721 standard
+  /// Unique identifier for NFT credentials, compliant with DIP721 standard
   public type TokenIdentifier = Nat;
+  
+  /// Principal type alias for better readability
   public type Principal = Principal.Principal;
   
   public type UserRole = {

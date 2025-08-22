@@ -9,10 +9,19 @@
     "start": "webpack serve --mode development --open",
     "deploy:local": "dfx deploy --network local",
     "deploy:ic": "dfx deploy --network ic",
+    "demo": "node demo-server.js",
+    "demo:dev": "npm run build:dev && npm run demo",
     "test": "echo \"Tests coming soon\" && exit 0",
     "lint": "echo \"Linting coming soon\" && exit 0"
   },
-  "keywords": ["icp", "dfinity", "nft", "credentials", "blockchain", "wchl2025"],
+  "keywords": [
+    "icp",
+    "dfinity",
+    "nft",
+    "credentials",
+    "blockchain",
+    "wchl2025"
+  ],
   "author": "TrustSeal Team",
   "license": "MIT",
   "devDependencies": {
@@ -38,6 +47,8 @@
     "@dfinity/auth-client": "^0.19.3",
     "@dfinity/candid": "^0.19.3",
     "@dfinity/principal": "^0.19.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }

@@ -104,11 +104,11 @@ const App: React.FC = () => {
     try {
       const agent = new HttpAgent({
         identity,
-        host: process.env.NODE_ENV === 'development' ? 'http://localhost:4943' : 'https://icp-api.io'
+        host: (process?.env?.NODE_ENV === 'development') ? 'http://localhost:4943' : 'https://icp-api.io'
       });
 
       // For local development, disable certificate verification
-      if (process.env.NODE_ENV === 'development') {
+      if (process?.env?.NODE_ENV === 'development') {
         await agent.fetchRootKey();
       }
 
@@ -266,8 +266,8 @@ const App: React.FC = () => {
     setLoading(true);
     try {
       await authClient.login({
-        identityProvider: process.env.NODE_ENV === 'development' 
-          ? `http://localhost:4943/?canisterId=${process.env.INTERNET_IDENTITY_CANISTER_ID}`
+        identityProvider: (process?.env?.NODE_ENV === 'development') 
+          ? `http://localhost:4943/?canisterId=${process?.env?.INTERNET_IDENTITY_CANISTER_ID || ''}`
           : 'https://identity.ic0.app',
         onSuccess: async () => {
           const identity = authClient.getIdentity();

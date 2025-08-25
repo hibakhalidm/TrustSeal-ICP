@@ -1,15 +1,16 @@
 # 🔐 TrustSeal ICP - WCHL 2025 Optimized Submission
 
-**TrustSeal ICP** is a production-ready decentralized credential verification system built natively on Internet Computer Protocol (ICP). This hackathon submission demonstrates enterprise-grade blockchain credential management with role-based access control and real-time verification capabilities.
+**TrustSeal ICP** is a production-ready decentralized credential verification system built natively on Internet Computer Protocol (ICP). This hackathon submission demonstrates enterprise-grade blockchain credential management with role-based access control, enhanced security, and real-time verification capabilities.
 
 ## 🎯 WCHL 2025 Highlights
 
 ✅ **Pure ICP Architecture** - Native Motoko smart contracts with React frontend  
 ✅ **Production-Ready Code** - Professional error handling and comprehensive documentation  
-✅ **Role-Based System** - Separate dashboards for Admin, Issuer, and Checker workflows  
-✅ **Real-Time Verification** - Instant credential verification with audit trails  
-✅ **Modern UI/UX** - Professional notification system and responsive design  
-✅ **Demo Excellence** - Comprehensive demo script and presentation materials  
+✅ **Enhanced Security** - Input validation, RBAC enforcement, and rate limiting  
+✅ **Scalable Design** - Pagination, efficient storage, and performance optimizations  
+✅ **Modern Frontend** - React Query, Zustand state management, and Error Boundaries  
+✅ **Comprehensive Testing** - Jest + RTL for frontend, Motoko test harness for backend  
+✅ **CI/CD Pipeline** - Automated testing, linting, and deployment workflows  
 
 ## 🚀 Project Overview
 
@@ -28,24 +29,68 @@ Watch our comprehensive project pitch showcasing TrustSeal ICP's vision, archite
 
 ### 🎮 [**Demo Video**](https://youtu.be/kE9qLeYLnGo)
 See TrustSeal ICP in action with a complete walkthrough of all user roles, features, and real-time verification capabilities.
+
 ## 🏗️ Architecture
 
 TrustSeal ICP uses a clean, ICP-native architecture optimized for production deployment:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Internet Computer Protocol                │
-├─────────────────────────────────────────────────────────────┤
-│  ┌──────────────────┐              ┌──────────────────┐    │
-│  │ TrustSeal Backend│              │ TrustSeal Frontend│    │
-│  │   (Motoko)       │◄────────────►│    (React)       │    │
-│  │                  │              │                  │    │
-│  │ • User Management│              │ • Admin Dashboard│    │
-│  │ • NFT Credentials│              │ • Issuer Panel   │    │
-│  │ • Role-Based Auth│              │ • Checker Portal │    │
-│  │ • Verification   │              │ • Notifications  │    │
-│  └──────────────────┘              └──────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Internet Computer Protocol                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    TrustSeal Backend Canister                       │   │
+│  │                         (Motoko)                                    │   │
+│  │                                                                     │   │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐    │   │
+│  │  │   User Mgmt     │  │  Credential     │  │   Access        │    │   │
+│  │  │   & RBAC        │  │   Management    │  │   Control       │    │   │
+│  │  │                 │  │                 │  │                 │    │   │
+│  │  │ • User Profiles │  │ • NFT Minting   │  │ • Role Guards   │    │   │
+│  │  │ • Role Assignment│  │ • Verification  │  │ • Rate Limiting│    │   │
+│  │  │ • Verification  │  │ • Revocation    │  │ • Input Validation│   │   │
+│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘    │   │
+│  │                                                                     │   │
+│  │  ┌─────────────────┐  ┌─────────────────┐                          │   │
+│  │  │   Storage       │  │   System        │                          │   │
+│  │  │   Layer         │  │   State         │                          │   │
+│  │  │                 │  │                 │                          │   │
+│  │  │ • Credentials   │  │ • Admin Config  │                          │   │
+│  │  │ • User Profiles │  │ • Upgrade Hooks │                          │   │
+│  │  │ • HashMaps      │  │ • Statistics    │                          │   │
+│  │  └─────────────────┘  └─────────────────┘                          │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                     │                                     │
+│                                     ▼                                     │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    TrustSeal Frontend                              │   │
+│  │                        (React)                                     │   │
+│  │                                                                     │   │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐    │   │
+│  │  │   Auth Layer    │  │   Dashboard     │  │   Services      │    │   │
+│  │  │                 │  │   Router        │  │                 │    │   │
+│  │  │ • Internet      │  │ • Role-based    │  │ • Actor Client  │    │   │
+│  │  │   Identity      │  │ • Admin Panel   │  │ • API Calls     │    │   │
+│  │  │ • Principal     │  │ • Issuer Panel  │  │ • State Mgmt    │    │   │
+│  │  │   Management    │  │ • Checker Panel │  │ • Notifications │    │   │
+│  │  └─────────────────┘  └─────────────────┘                          │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                     │                                     │
+│                                     ▼                                     │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    Demo Server                                      │   │
+│  │                     (Express.js)                                    │   │
+│  │                                                                     │   │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐    │   │
+│  │  │   API Routes    │  │   Mock Data     │  │   Static        │    │   │
+│  │  │                 │  │                 │  │   Serving       │   │   │
+│  │  │ • Admin APIs    │  │ • Credentials   │  │ • React Build   │   │   │
+│  │  │ • Issuer APIs   │  │ • User Profiles │  │ • SPA Routing   │   │   │
+│  │  │ • Checker APIs  │  │ • Verification  │  │ • CORS Support  │   │   │
+│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘    │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Core Components
@@ -53,6 +98,8 @@ TrustSeal ICP uses a clean, ICP-native architecture optimized for production dep
 - **Motoko Smart Contracts** - Role-based credential management with DIP721 NFT standard
 - **React Frontend** - Role-specific dashboards with modern UI and real-time notifications
 - **Demo Server** - Express.js server for offline demonstrations and testing
+- **Enhanced Security** - Input validation, RBAC enforcement, and rate limiting
+- **Scalable Architecture** - Pagination, efficient storage, and performance optimizations
 
 ## 🛠️ Tech Stack
 
@@ -64,20 +111,24 @@ TrustSeal ICP uses a clean, ICP-native architecture optimized for production dep
 
 ### Frontend
 - **React 18** with **TypeScript** for type-safe component development
+- **React Query** for efficient data fetching and caching
+- **Zustand** for lightweight state management
 - **Webpack 5** with modern JavaScript bundling and optimization
 - **Custom CSS** with modern design patterns and animations
 - **Internet Identity** integration for decentralized authentication
 
-### Development & Demo
+### Development & Testing
+- **Jest + React Testing Library** for comprehensive frontend testing
+- **Motoko Test Harness** for backend function testing
+- **ESLint + Prettier** for code quality and formatting
+- **Husky + lint-staged** for pre-commit quality gates
 - **Express.js** demo server for offline presentations
-- **Custom notification system** with React hooks
-- **Responsive design** optimized for all devices
-- **Professional error handling** with graceful fallbacks
 
-### DevOps
-- **Git** for version control with comprehensive commit history
+### DevOps & CI/CD
+- **GitHub Actions** for automated testing and deployment
 - **DFX** for local and mainnet deployment
 - **NPM** for dependency management and build scripts
+- **Automated Security Scanning** for vulnerability detection
 
 ## 🚀 Quick Start
 
@@ -99,229 +150,250 @@ npm run demo:dev
 
 **🎯 Demo available at: http://localhost:3001**
 
-### Option 2: Full ICP Deployment
+### Option 2: Full Development Setup
 ```bash
+# Clone the repository
+git clone <https://github.com/hibakhalidm/TrustSeal-ICP>
+cd TrustSeal-ICP
+
 # Install dependencies
 npm install
 
-# Start local ICP replica
-dfx start --clean --background
+# Start development server
+npm start
+
+# In another terminal, deploy canisters locally
+dfx start --background
+dfx deploy --network local
+```
+
+## 🧪 Testing & Quality
+
+### Frontend Testing
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+
+# Run specific test files
+npm test -- --testPathPattern=ErrorBoundary
+```
+
+### Backend Testing
+```bash
+# Run Motoko tests
+npm run canister:test
+
+# Check Motoko syntax
+moc --check src/trustseal_backend/main.mo
+moc --check src/trustseal_backend/tests/main.test.mo
+```
+
+### Code Quality
+```bash
+# Lint code
+npm run lint
+
+# Fix linting issues automatically
+npm run lint:fix
+
+# Check code formatting
+npm run format:check
+
+# Format code automatically
+npm run format
+
+# Type checking
+npm run typecheck
+```
+
+## 🔒 Security Features
+
+### Backend Security
+- **Input Validation**: Comprehensive validation for all user inputs
+  - Text length limits and format validation
+  - Date format validation (ISO 8601)
+  - Principal validation (prevents anonymous usage)
+- **Role-Based Access Control**: Granular permission system
+  - Admin, Issuer, and Checker roles
+  - Verified issuer requirements
+  - Flexible role checking functions
+- **Rate Limiting**: Per-principal call throttling
+  - Configurable time gaps between calls
+  - Protection against spam and abuse
+
+### Frontend Security
+- **Error Boundaries**: Graceful error handling and recovery
+- **Secure State Management**: Centralized state with access controls
+- **Input Sanitization**: React-based XSS protection
+- **Authentication**: Internet Identity integration
+
+## 📈 Performance & Scalability
+
+### Backend Optimizations
+- **Pagination**: All list operations use pagination (max 100 items per page)
+- **Efficient Storage**: Optimized HashMap operations and upgrade hooks
+- **Rate Limiting**: Prevents abuse and ensures fair usage
+- **Input Validation**: Early rejection of invalid data
+
+### Frontend Optimizations
+- **React Query**: Efficient data fetching with caching and invalidation
+- **Zustand**: Lightweight state management with optimized selectors
+- **Code Splitting**: Lazy loading for better initial load performance
+- **Bundle Optimization**: Webpack 5 optimizations and tree shaking
+
+## 🚀 Deployment
+
+### Local Development
+```bash
+# Start local network
+dfx start --background
 
 # Deploy canisters
 dfx deploy --network local
 
 # Start frontend
-npm run start
+npm start
 ```
 
-**🌐 ICP Frontend available at: http://localhost:8080/?canisterId=<frontend-canister-id>**
-
-### Option 3: Mainnet Deployment
+### Mainnet Deployment
 ```bash
-# Create secure identity
-dfx identity new trustseal_deploy
-dfx identity use trustseal_deploy
-
-# Deploy to mainnet (requires cycles)
+# Deploy to IC mainnet
 dfx deploy --network ic
 
-# Get canister URLs
-dfx canister --network ic id trustseal_frontend
+# Verify deployment
+dfx canister status trustseal_backend --network ic
+dfx canister status trustseal_frontend --network ic
 ```
 
-## 📖 Role-Based Usage Guide
+### Demo Server
+```bash
+# Build and start demo server
+npm run demo:dev
 
-### 🛡️ Admin Dashboard
-**System administrators manage the entire ecosystem:**
-1. **System Overview** - Monitor real-time statistics and platform health
-2. **User Management** - View, verify, and manage all registered users  
-3. **Register New Users** - Add universities (Issuers) and employers (Checkers)
-4. **Verify Institutions** - Approve issuers before they can mint credentials
-5. **Audit Trail** - Track all system activities and user interactions
+# Demo server runs on http://localhost:3001
+# Includes mock data and API endpoints
+```
 
-### 🎓 Issuer Dashboard (Universities)
-**Educational institutions issue and manage credentials:**
-1. **Institution Overview** - View issued credentials and organization statistics
-2. **Issue New Credential** - Mint NFT-based diplomas and certificates for students
-3. **Manage Credentials** - View, search, and revoke previously issued credentials
-4. **Revocation Management** - Revoke credentials with audit trail and reasoning
-5. **Student Records** - Track all credentials issued to specific students
+## 📚 Documentation
 
-### ✅ Checker Dashboard (Employers/Verifiers)
-**Employers and verifiers authenticate credentials instantly:**
-1. **Verification Overview** - Dashboard showing verification statistics and history
-2. **Verify Credential** - Instant verification by Token ID or QR code scanning
-3. **Verification History** - Complete audit trail of all verification activities
-4. **Export Results** - Download verification results for compliance purposes
-5. **Real-time Status** - Live credential status including revocation checking
+### Architecture & Design
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - System design and data flow
+- **[Security Documentation](SECURITY.md)** - Security model and threat analysis
+- **[API Reference](docs/API.md)** - Backend method documentation
 
-## 🔧 Motoko Smart Contract Functions
+### Development Guides
+- **[Testing Guide](docs/TESTING.md)** - Testing strategies and examples
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Local and production deployment
+- **[Contributing Guide](CONTRIBUTING.md)** - Development workflow and standards
 
-### Admin Functions
-- `initializeAdmin()` - Initialize the first admin user (one-time setup)
-- `registerUser(principal, role, name, org)` - Register new users with roles
-- `verifyUser(principal)` - Verify/approve new users before they can operate
-- `getAllUsers()` - Retrieve all registered users with their status
-- `getSystemStats()` - Get real-time system statistics and metrics
+### User Guides
+- **[User Manual](docs/USER_MANUAL.md)** - End-user documentation
+- **[Admin Guide](docs/ADMIN_GUIDE.md)** - Administrative functions
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 
-### Issuer Functions  
-- `mint(student_principal, name, type, institution, date)` - Issue new credential NFT
-- `revokeCredential(tokenId, reason)` - Revoke credential with audit trail
-- `getCredentialsByIssuer(issuer)` - Get all credentials issued by specific issuer
-- `getTokensOfUser(user)` - Get all valid (non-revoked) credentials for user
+## 🔧 Development Workflow
 
-### Checker Functions
-- `verifyCredential(tokenId)` - Instant credential verification with status
-- `getCredentialMetadata(tokenId)` - Get full credential details and metadata
-- `getVerificationHistory()` - Audit trail of all verification activities
+### Pre-commit Hooks
+```bash
+# Install pre-commit hooks
+npm run prepare
 
-### Public Query Functions
-- `getUserRole(principal)` - Get user's role (Admin/Issuer/Checker)
-- `getUserProfile(principal)` - Get complete user profile information
-- `updateLastLogin()` - Update user's last login timestamp for activity tracking
+# Hooks automatically run:
+# - ESLint checking
+# - Prettier formatting
+# - TypeScript compilation
+# - Test execution
+```
 
-## 🧪 Demo Features
+### CI/CD Pipeline
+Our GitHub Actions workflow includes:
+- **Frontend Quality**: Lint, test, build verification
+- **Backend Quality**: Motoko syntax and test execution
+- **Security Scanning**: Dependency audits and secret detection
+- **Integration Testing**: Demo server validation
+- **Performance Monitoring**: Bundle size and Lighthouse metrics
+- **Automated Deployment**: IC mainnet deployment
 
-### Live Demo Capabilities
-- **Real ICP Integration** - Actual Motoko smart contracts on local/mainnet
-- **Demo Server Mode** - Express.js server with comprehensive mock data for presentations
-- **Internet Identity** - Decentralized authentication (when available)
-- **Role-Based Demo** - Pre-configured users for each role type
-- **Fallback System** - Graceful degradation to demo data when blockchain unavailable
-
-### Sample Demo Data
-- **Universities**: MIT, Stanford, Harvard (Issuer role)
-- **Employers**: Google, Microsoft, Apple (Checker role)  
-- **Credentials**: Computer Science degrees, certifications, licenses
-- **Students**: Pre-configured student profiles with issued credentials
-
-## 🔒 Security Features
-
-### Blockchain Security
-- **Internet Computer Protocol** - Immutable, tamper-proof credential storage
-- **DIP721 NFT Standard** - Standardized token-based credential ownership
-- **Cryptographic Signatures** - Each credential cryptographically signed by issuer
-- **Decentralized Storage** - No single point of failure or central authority
-
-### Access Control
-- **Role-Based Access Control (RBAC)** - Strict role separation and permissions
-- **Principal-Based Authentication** - ICP-native identity management
-- **Verification Requirements** - Issuers must be verified before credential issuance
-- **Audit Trails** - Complete logging of all system activities
-
-### Privacy Protection
-- **Zero-Knowledge Ready** - Architecture prepared for ZK-proof integration
-- **Selective Disclosure** - Future capability for privacy-preserving verification
-- **Minimal Data Exposure** - Only necessary information revealed during verification
-- **User Ownership** - Students own their credentials as NFT tokens
-
-## 📱 Key Features
-
-### 🎓 For Universities (Issuers)
-- **Professional Dashboard** - Clean, intuitive interface for credential management
-- **Bulk Credential Issuance** - Efficient processing for multiple students
-- **Credential Lifecycle Management** - Issue, track, revoke, and audit credentials
-- **Institution Branding** - Customizable credential templates and metadata
-- **Real-time Statistics** - Monitor issuance activity and student records
-
-### 👨‍🎓 For Students (Credential Owners)
-- **NFT Ownership** - True ownership of credentials as blockchain tokens
-- **Privacy Control** - Choose what information to share during verification
-- **Portable Credentials** - Access from anywhere with Internet Identity
-- **Verification Sharing** - Generate proofs for employers without revealing full details
-- **Lifetime Access** - Permanent access to credentials even if institution closes
-
-### 🏢 For Employers (Checkers)
-- **Instant Verification** - Sub-second credential authentication
-- **Batch Processing** - Verify multiple credentials simultaneously
-- **Compliance Reporting** - Export verification results for audit purposes
-- **Real-time Status** - Live checking for credential revocation
-- **Cost Reduction** - Eliminate manual verification processes and delays
-
-## 🏆 WCHL 2025 Competitive Advantages
-
-### 🎯 Problem-Solution Fit
-**Traditional Credential Verification Problems:**
-- ⏰ **Weeks of delays** - Manual verification through phone calls and emails
-- 💰 **High costs** - $50-200 per verification for manual processing
-- 🚨 **Fraud epidemic** - $1B+ annual losses from credential fraud
-- 🔒 **Privacy invasion** - Full transcripts shared for simple verification
-
-**TrustSeal ICP Solutions:**
-- ⚡ **Instant verification** - Results in under 1 second
-- 💸 **Cost elimination** - Automated verification at fraction of cost
-- 🛡️ **Fraud prevention** - Immutable blockchain storage prevents forgery
-- 🥷 **Privacy preservation** - Selective disclosure without revealing full records
-
-### 🚀 Technical Innovation
-1. **Pure ICP Architecture** - Native integration with Internet Computer Protocol
-2. **Production-Ready Code** - Enterprise-grade error handling and documentation
-3. **Role-Based Smart Contracts** - Advanced RBAC implementation in Motoko
-4. **Modern UI/UX** - Professional dashboards with real-time notifications
-5. **Scalable Design** - Ready for millions of credentials and global deployment
-
-### 🌟 Unique Differentiators
-- **Complete Ecosystem** - All stakeholders addressed in single platform
-- **Real Blockchain** - Not just a prototype, actual working ICP deployment
-- **Professional Quality** - Production-ready code with comprehensive testing
-- **Demo Excellence** - Structured presentation materials and fallback systems
-
-## 🔮 Roadmap & Future Enhancements
-
-### 🎯 Immediate (Post-WCHL 2025)
-- **Mainnet Deployment** - Deploy to ICP mainnet with live canister IDs
-- **Zero-Knowledge Proofs** - Implement full ZK-SNARK integration for privacy
-- **Mobile Application** - React Native app for credential management
-- **QR Code Integration** - Visual credential sharing and verification
-
-### 🚀 Short-term (Q2 2025)
-- **Advanced Analytics** - Comprehensive dashboard with verification metrics
-- **Multi-language Support** - Internationalization for global adoption
-- **API Integration** - REST APIs for enterprise system integration
-- **Batch Operations** - Bulk credential issuance and verification
-
-### 🌍 Long-term (2025-2026)
-- **Cross-Chain Integration** - Interoperability with other blockchain networks
-- **AI-Powered Insights** - Machine learning for fraud detection and analytics
-- **Enterprise Partnerships** - Direct integration with university information systems
-- **Global Standards** - Compliance with international credential standards
+### Code Standards
+- **TypeScript**: Strict type checking and path mapping
+- **ESLint**: TypeScript + React rules with accessibility
+- **Prettier**: Consistent code formatting
+- **Conventional Commits**: Standardized commit messages
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
-1. **DFX not found**: Install DFX SDK or use WSL on Windows
-2. **Port conflicts**: Ensure ports 3001, 8080, and 4943 are available
-3. **Build failures**: Run `npm install` and check Node.js version (18+)
-4. **WSL path issues**: Use native Windows or cloud development environment
 
-### Health Checks & URLs
-- **Demo Server**: http://localhost:3001 (Express server)
-- **ICP Local**: http://localhost:4943 (DFX replica)
-- **Frontend Canister**: http://localhost:8080/?canisterId=<canister-id>
-- **DFX Status**: `dfx ping local` (check replica health)
+#### Build Issues
+```bash
+# Clear node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
 
-### Demo Fallback Options
-- **Option 1**: Use demo server (`npm run demo:dev`) for reliable presentations
-- **Option 2**: Show screenshots and code walkthrough if technical issues
-- **Option 3**: Use pre-recorded demo video for backup presentation
+# Clear webpack cache
+npm run build:dev
+```
 
-## 📊 Performance Metrics
+#### DFX Issues
+```bash
+# Reset local network
+dfx stop
+dfx start --clean --background
 
-- **Credential Verification**: < 1 second (blockchain query)
-- **Credential Issuance**: < 3 seconds (including NFT minting)
-- **Dashboard Loading**: < 2 seconds (with real-time data)
-- **Notification Response**: Instant (real-time UI feedback)
-- **Scalability**: 1000+ TPS potential on ICP mainnet
+# Redeploy canisters
+dfx deploy --network local
+```
+
+#### Test Issues
+```bash
+# Clear Jest cache
+npm test -- --clearCache
+
+# Run tests with verbose output
+npm test -- --verbose
+```
+
+### Getting Help
+- **Documentation**: Check the [docs/](docs/) directory
+- **Issues**: [GitHub Issues](https://github.com/trustseal/trustseal-icp/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/trustseal/trustseal-icp/discussions)
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+- Development setup
+- Code standards
+- Testing requirements
+- Pull request process
+- Code review guidelines
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **DFINITY Foundation** for the Internet Computer Protocol
+- **WCHL 2025** organizers for the hackathon opportunity
+- **Open Source Community** for the amazing tools and libraries
+- **TrustSeal Team** for the collaborative development effort
+
+## 📞 Contact
+
+- **Project**: [GitHub Repository](https://github.com/trustseal/trustseal-icp)
+- **Issues**: [GitHub Issues](https://github.com/trustseal/trustseal-icp/issues)
+- **Security**: [SECURITY.md](SECURITY.md)
+- **Team**: [TrustSeal Team](https://github.com/orgs/trustseal)
+
+---
+
+**🔐 TrustSeal ICP** - Decentralized Credential Verification on Internet Computer  
+**🏆 WCHL 2025 Submission** - Production-ready blockchain credential management  
+**🚀 Version 1.1.0** - Enhanced Security & Scalability
 

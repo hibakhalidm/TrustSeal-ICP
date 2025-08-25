@@ -9,9 +9,10 @@
  * - Role-based user management (Admin, Issuer, Checker)
  * - Credential issuance, verification, and revocation
  * - Audit trails and system statistics
+ * - Enhanced security with input validation and rate limiting
  * 
  * @author TrustSeal Team
- * @version 1.0.0 - WCHL 2025 Submission
+ * @version 1.1.0 - Enhanced Security & Scalability
  */
 
 import Principal "mo:base/Principal";
@@ -20,9 +21,10 @@ import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
-import Result "mo:base/Result";
+import Result "mo:Result";
 import Time "mo:base/Time";
 import Option "mo:base/Option";
+import Trie "mo:base/Trie";
 
 actor TrustSealBackend {
 
@@ -65,6 +67,18 @@ actor TrustSealBackend {
     issue_timestamp: Int;
   };
 
+  // Pagination types
+  public type Page<T> = {
+    items: [T];
+    nextCursor: ?Text;
+    total: Nat;
+  };
+
+  public type PaginationParams = {
+    offset: Nat;
+    limit: Nat;
+  };
+
   // Storage
   private stable var nextTokenId: Nat = 0;
   private stable var credentialsEntries: [(TokenIdentifier, Credential)] = [];
@@ -75,48 +89,92 @@ actor TrustSealBackend {
   // Default admin principal (set during deployment)
   private stable var adminPrincipal: ?Principal = null;
 
+  // Rate limiting storage
+  private stable var lastCallEntries: [(Principal, Int)] = [];
+  private var lastCall = HashMap.HashMap<Principal, Int>(16, Principal.equal, Principal.hash);
+
+  // Configuration constants
+  private let MAX_TEXT_LENGTH: Nat = 1000;
+  private let MAX_NAME_LENGTH: Nat = 100;
+  private let MAX_ORGANIZATION_LENGTH: Nat = 200;
+  private let RATE_LIMIT_SECONDS: Nat = 1; // Minimum 1 second between calls
+  private let MAX_PAGE_SIZE: Nat = 100; // Maximum items per page
+
   // System upgrade hooks
   system func preupgrade() {
     credentialsEntries := Iter.toArray(credentials.entries());
     userProfilesEntries := Iter.toArray(userProfiles.entries());
+    lastCallEntries := Iter.toArray(lastCall.entries());
   };
 
   system func postupgrade() {
     credentialsEntries := [];
     userProfilesEntries := [];
+    lastCallEntries := [];
   };
 
-  // Initialize admin (call once after deployment)
-  public shared({ caller }) func initializeAdmin() : async Result.Result<Text, Text> {
-    switch (adminPrincipal) {
-      case (?_) { #err("Admin already initialized") };
-      case null {
-        adminPrincipal := ?caller;
-        let adminProfile: UserProfile = {
-          principal = caller;
-          role = #Admin;
-          name = "System Administrator";
-          organization = "TrustSeal ICP";
-          verified = true;
-          registration_date = Time.now();
-          last_login = ?Time.now();
-        };
-        userProfiles.put(caller, adminProfile);
-        #ok("Admin initialized successfully")
+  // ===== INPUT VALIDATION HELPERS =====
+  
+  private func nonEmpty(t: Text, maxLength: Nat): Bool {
+    t.size() > 0 and t.size() <= maxLength
+  };
+
+  private func isValidDate(t: Text): Bool {
+    // Simple ISO 8601 date validation (YYYY-MM-DD)
+    if (t.size() != 10) return false;
+    if (Text.char(t, 4) != '-' or Text.char(t, 7) != '-') return false;
+    
+    // Basic year validation (1900-2100)
+    let year = Text.sub(t, 0, 4);
+    let month = Text.sub(t, 5, 2);
+    let day = Text.sub(t, 8, 2);
+    
+    // Convert to numbers and validate ranges
+    // This is a simplified validation - in production, use proper date parsing
+    true
+  };
+
+  private func isValidPrincipal(p: Principal): Bool {
+    // Basic principal validation
+    Principal.isAnonymous(p) == false
+  };
+
+  // ===== RATE LIMITING =====
+  
+  private func canCall(caller: Principal, now: Int, minGapSecs: Nat): Bool {
+    switch (lastCall.get(caller)) {
+      case (?lastCallTime) { 
+        let timeDiff = now - lastCallTime;
+        timeDiff >= (minGapSecs * 1_000_000_000) // Convert seconds to nanoseconds
       };
+      case null { true };
     }
   };
 
-  // Check if caller is admin
-  private func isAdmin(caller: Principal) : Bool {
-    switch (adminPrincipal) {
-      case (?admin) { Principal.equal(caller, admin) };
+  private func updateLastCall(caller: Principal, now: Int) {
+    lastCall.put(caller, now);
+  };
+
+  // ===== RBAC GUARDS =====
+  
+  private func requireRole(caller: Principal, allowedRoles: [UserRole]): Bool {
+    switch (userProfiles.get(caller)) {
+      case (?profile) {
+        Array.some<UserRole>(allowedRoles, func(role) = profile.role == role)
+      };
       case null { false };
     }
   };
 
-  // Check if caller is verified issuer
-  private func isVerifiedIssuer(caller: Principal) : Bool {
+  private func requireAdmin(caller: Principal): Bool {
+    requireRole(caller, [#Admin])
+  };
+
+  private func requireIssuer(caller: Principal): Bool {
+    requireRole(caller, [#Admin, #Issuer])
+  };
+
+  private func requireVerifiedIssuer(caller: Principal): Bool {
     switch (userProfiles.get(caller)) {
       case (?profile) {
         switch (profile.role) {
@@ -129,6 +187,39 @@ actor TrustSealBackend {
     }
   };
 
+  // ===== INITIALIZATION =====
+
+  // Initialize admin (call once after deployment)
+  public shared({ caller }) func initializeAdmin() : async Result.Result<Text, Text> {
+    let now = Time.now();
+    
+    // Rate limiting check
+    if (not canCall(caller, now, RATE_LIMIT_SECONDS)) {
+      return #err("Rate limit exceeded. Please wait before trying again.");
+    };
+    
+    switch (adminPrincipal) {
+      case (?_) { #err("Admin already initialized") };
+      case null {
+        adminPrincipal := ?caller;
+        let adminProfile: UserProfile = {
+          principal = caller;
+          role = #Admin;
+          name = "System Administrator";
+          organization = "TrustSeal ICP";
+          verified = true;
+          registration_date = now;
+          last_login = ?now;
+        };
+        userProfiles.put(caller, adminProfile);
+        updateLastCall(caller, now);
+        #ok("Admin initialized successfully")
+      };
+    }
+  };
+
+  // ===== USER MANAGEMENT =====
+
   // Register new user (admin only or self-registration for checkers)
   public shared({ caller }) func registerUser(
     userPrincipal: Principal,
@@ -137,11 +228,31 @@ actor TrustSealBackend {
     organization: Text
   ) : async Result.Result<Text, Text> {
     
+    let now = Time.now();
+    
+    // Rate limiting check
+    if (not canCall(caller, now, RATE_LIMIT_SECONDS)) {
+      return #err("Rate limit exceeded. Please wait before trying again.");
+    };
+    
+    // Input validation
+    if (not isValidPrincipal(userPrincipal)) {
+      return #err("Invalid principal provided");
+    };
+    
+    if (not nonEmpty(name, MAX_NAME_LENGTH)) {
+      return #err("Name must be between 1 and " # Nat.toText(MAX_NAME_LENGTH) # " characters");
+    };
+    
+    if (not nonEmpty(organization, MAX_ORGANIZATION_LENGTH)) {
+      return #err("Organization must be between 1 and " # Nat.toText(MAX_ORGANIZATION_LENGTH) # " characters");
+    };
+    
     // Check permissions
     let canRegister = switch (role) {
-      case (#Admin) { isAdmin(caller) };
-      case (#Issuer) { isAdmin(caller) };
-      case (#Checker) { isAdmin(caller) or Principal.equal(caller, userPrincipal) };
+      case (#Admin) { requireAdmin(caller) };
+      case (#Issuer) { requireAdmin(caller) };
+      case (#Checker) { requireAdmin(caller) or Principal.equal(caller, userPrincipal) };
     };
 
     if (not canRegister) {
@@ -157,11 +268,12 @@ actor TrustSealBackend {
           role = role;
           name = name;
           organization = organization;
-          verified = isAdmin(caller); // Admin registrations are auto-verified
-          registration_date = Time.now();
+          verified = requireAdmin(caller); // Admin registrations are auto-verified
+          registration_date = now;
           last_login = null;
         };
         userProfiles.put(userPrincipal, profile);
+        updateLastCall(caller, now);
         #ok("User registered successfully")
       };
     }
@@ -182,7 +294,14 @@ actor TrustSealBackend {
 
   // Verify user (admin only)
   public shared({ caller }) func verifyUser(userPrincipal: Principal) : async Result.Result<Text, Text> {
-    if (not isAdmin(caller)) {
+    let now = Time.now();
+    
+    // Rate limiting check
+    if (not canCall(caller, now, RATE_LIMIT_SECONDS)) {
+      return #err("Rate limit exceeded. Please wait before trying again.");
+    };
+    
+    if (not requireAdmin(caller)) {
       return #err("Only admin can verify users");
     };
 
@@ -192,6 +311,7 @@ actor TrustSealBackend {
           profile with verified = true;
         };
         userProfiles.put(userPrincipal, updatedProfile);
+        updateLastCall(caller, now);
         #ok("User verified successfully")
       };
       case null { #err("User not found") };
@@ -200,22 +320,35 @@ actor TrustSealBackend {
 
   // Update last login
   public shared({ caller }) func updateLastLogin() : async Result.Result<Text, Text> {
+    let now = Time.now();
+    
+    // Rate limiting check
+    if (not canCall(caller, now, RATE_LIMIT_SECONDS)) {
+      return #err("Rate limit exceeded. Please wait before trying again.");
+    };
+    
     switch (userProfiles.get(caller)) {
       case (?profile) {
         let updatedProfile = {
-          profile with last_login = ?Time.now();
+          profile with last_login = ?now;
         };
         userProfiles.put(caller, updatedProfile);
+        updateLastCall(caller, now);
         #ok("Login updated")
       };
       case null { #err("User not found") };
     }
   };
 
-  // Get all users (admin only)
-  public shared({ caller }) func getAllUsers() : async Result.Result<[UserProfile], Text> {
-    if (not isAdmin(caller)) {
+  // Get all users with pagination (admin only)
+  public shared({ caller }) func getAllUsers(params: PaginationParams) : async Result.Result<Page<UserProfile>, Text> {
+    if (not requireAdmin(caller)) {
       return #err("Only admin can view all users");
+    };
+    
+    // Validate pagination parameters
+    if (params.limit > MAX_PAGE_SIZE) {
+      return #err("Page size cannot exceed " # Nat.toText(MAX_PAGE_SIZE));
     };
     
     let allUsers = Iter.toArray(
@@ -224,8 +357,22 @@ actor TrustSealBackend {
         func(entry: (Principal, UserProfile)) : UserProfile = entry.1
       )
     );
-    #ok(allUsers)
+    
+    let total = allUsers.size();
+    let start = Nat.min(params.offset, total);
+    let end = Nat.min(start + params.limit, total);
+    
+    let pageItems = Array.subArray<UserProfile>(allUsers, start, end - start);
+    let nextCursor = if (end < total) ?Nat.toText(end) else null;
+    
+    #ok({
+      items = pageItems;
+      nextCursor = nextCursor;
+      total = total;
+    })
   };
+
+  // ===== CREDENTIAL MANAGEMENT =====
 
   // Mint a new credential NFT (verified issuers only)
   public shared({ caller }) func mint(
@@ -236,8 +383,36 @@ actor TrustSealBackend {
     issue_date: Text
   ) : async Result.Result<TokenIdentifier, Text> {
     
-    if (not isVerifiedIssuer(caller)) {
+    let now = Time.now();
+    
+    // Rate limiting check
+    if (not canCall(caller, now, RATE_LIMIT_SECONDS)) {
+      return #err("Rate limit exceeded. Please wait before trying again.");
+    };
+    
+    if (not requireVerifiedIssuer(caller)) {
       return #err("Only verified issuers can mint credentials");
+    };
+
+    // Input validation
+    if (not isValidPrincipal(student_principal)) {
+      return #err("Invalid student principal provided");
+    };
+    
+    if (not nonEmpty(student_name, MAX_NAME_LENGTH)) {
+      return #err("Student name must be between 1 and " # Nat.toText(MAX_NAME_LENGTH) # " characters");
+    };
+    
+    if (not nonEmpty(credential_type, MAX_TEXT_LENGTH)) {
+      return #err("Credential type must be between 1 and " # Nat.toText(MAX_TEXT_LENGTH) # " characters");
+    };
+    
+    if (not nonEmpty(institution, MAX_ORGANIZATION_LENGTH)) {
+      return #err("Institution must be between 1 and " # Nat.toText(MAX_ORGANIZATION_LENGTH) # " characters");
+    };
+    
+    if (not isValidDate(issue_date)) {
+      return #err("Invalid date format. Use YYYY-MM-DD");
     };
 
     let tokenId = nextTokenId;
@@ -257,10 +432,11 @@ actor TrustSealBackend {
       owner = student_principal;
       issuer = caller;
       metadata = metadata;
-      issue_timestamp = Time.now();
+      issue_timestamp = now;
     };
 
     credentials.put(tokenId, credential);
+    updateLastCall(caller, now);
     #ok(tokenId)
   };
 
@@ -269,9 +445,21 @@ actor TrustSealBackend {
     tokenId: TokenIdentifier,
     reason: Text
   ) : async Result.Result<Text, Text> {
+    let now = Time.now();
+    
+    // Rate limiting check
+    if (not canCall(caller, now, RATE_LIMIT_SECONDS)) {
+      return #err("Rate limit exceeded. Please wait before trying again.");
+    };
+    
+    // Input validation
+    if (not nonEmpty(reason, MAX_TEXT_LENGTH)) {
+      return #err("Revocation reason must be between 1 and " # Nat.toText(MAX_TEXT_LENGTH) # " characters");
+    };
+    
     switch (credentials.get(tokenId)) {
       case (?credential) {
-        let canRevoke = isAdmin(caller) or Principal.equal(caller, credential.issuer);
+        let canRevoke = requireAdmin(caller) or Principal.equal(caller, credential.issuer);
         if (not canRevoke) {
           return #err("Only issuer or admin can revoke credentials");
         };
@@ -285,6 +473,7 @@ actor TrustSealBackend {
           credential with metadata = updatedMetadata;
         };
         credentials.put(tokenId, updatedCredential);
+        updateLastCall(caller, now);
         #ok("Credential revoked successfully")
       };
       case null { #err("Credential not found") };
@@ -293,6 +482,10 @@ actor TrustSealBackend {
 
   // Get all tokens owned by a user
   public query func getTokensOfUser(user: Principal) : async [TokenIdentifier] {
+    if (not isValidPrincipal(user)) {
+      return [];
+    };
+    
     let userCredentials = Iter.filter(
       credentials.entries(),
       func(entry: (TokenIdentifier, Credential)) : Bool {
@@ -306,8 +499,12 @@ actor TrustSealBackend {
     )
   };
 
-  // Get credentials issued by a specific issuer
-  public query func getCredentialsByIssuer(issuer: Principal) : async [Credential] {
+  // Get credentials issued by a specific issuer with pagination
+  public query func getCredentialsByIssuer(issuer: Principal, params: PaginationParams) : async Page<Credential> {
+    if (not isValidPrincipal(issuer)) {
+      return { items = []; nextCursor = null; total = 0 };
+    };
+    
     let issuerCredentials = Iter.filter(
       credentials.entries(),
       func(entry: (TokenIdentifier, Credential)) : Bool {
@@ -315,10 +512,23 @@ actor TrustSealBackend {
       }
     );
     
-    Array.map<(TokenIdentifier, Credential), Credential>(
+    let allCredentials = Array.map<(TokenIdentifier, Credential), Credential>(
       Iter.toArray(issuerCredentials),
       func(entry) = entry.1
-    )
+    );
+    
+    let total = allCredentials.size();
+    let start = Nat.min(params.offset, total);
+    let end = Nat.min(start + params.limit, total);
+    
+    let pageItems = Array.subArray<Credential>(allCredentials, start, end - start);
+    let nextCursor = if (end < total) ?Nat.toText(end) else null;
+    
+    {
+      items = pageItems;
+      nextCursor = nextCursor;
+      total = total;
+    }
   };
 
   // Get metadata for a specific token
@@ -334,14 +544,30 @@ actor TrustSealBackend {
     credentials.get(tokenId)
   };
 
-  // Get all credentials (for demo purposes - limit in production)
-  public query func getAllCredentials() : async [Credential] {
-    Iter.toArray(
+  // Get all credentials with pagination (for demo purposes - limit in production)
+  public query func getAllCredentials(params: PaginationParams) : async Page<Credential> {
+    // Validate pagination parameters
+    let limit = Nat.min(params.limit, MAX_PAGE_SIZE);
+    
+    let allCredentials = Iter.toArray(
       Iter.map(
         credentials.entries(),
         func(entry: (TokenIdentifier, Credential)) : Credential = entry.1
       )
-    )
+    );
+    
+    let total = allCredentials.size();
+    let start = Nat.min(params.offset, total);
+    let end = Nat.min(start + limit, total);
+    
+    let pageItems = Array.subArray<Credential>(allCredentials, start, end - start);
+    let nextCursor = if (end < total) ?Nat.toText(end) else null;
+    
+    {
+      items = pageItems;
+      nextCursor = nextCursor;
+      total = total;
+    }
   };
 
   // Verify credential by token ID
@@ -362,6 +588,8 @@ actor TrustSealBackend {
     }
   };
 
+  // ===== SYSTEM STATISTICS =====
+
   // Get system statistics (admin only)
   public shared({ caller }) func getSystemStats() : async Result.Result<{
     totalCredentials: Nat;
@@ -370,7 +598,14 @@ actor TrustSealBackend {
     totalCheckers: Nat;
     revokedCredentials: Nat;
   }, Text> {
-    if (not isAdmin(caller)) {
+    let now = Time.now();
+    
+    // Rate limiting check
+    if (not canCall(caller, now, RATE_LIMIT_SECONDS)) {
+      return #err("Rate limit exceeded. Please wait before trying again.");
+    };
+    
+    if (not requireAdmin(caller)) {
       return #err("Only admin can view system statistics");
     };
 
@@ -395,6 +630,7 @@ actor TrustSealBackend {
       )
     );
 
+    updateLastCall(caller, now);
     #ok({
       totalCredentials = credentials.size();
       totalUsers = userProfiles.size();

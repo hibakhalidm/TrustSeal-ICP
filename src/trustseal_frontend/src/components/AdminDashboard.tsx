@@ -150,12 +150,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity }) => {
   const handleRegisterUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess('');
 
     try {
       // Mock implementation for demo
-      setSuccess(`User ${registerForm.name} registered successfully as ${registerForm.role}`);
+      showSuccess(`User ${registerForm.name} registered successfully as ${registerForm.role}`);
       setRegisterForm({
         userPrincipal: '',
         role: 'Issuer',
@@ -166,7 +164,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity }) => {
         await loadAllUsers();
       }
     } catch (err) {
-      setError('Failed to register user');
+      showError('Failed to register user');
     }
     setLoading(false);
   };
@@ -175,10 +173,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity }) => {
     setLoading(true);
     try {
       // Mock implementation for demo
-      setSuccess('User verified successfully');
+      showSuccess('User verified successfully');
       await loadAllUsers();
     } catch (err) {
-      setError('Failed to verify user');
+      showError('Failed to verify user');
     }
     setLoading(false);
   };
@@ -211,8 +209,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity }) => {
         </button>
       </div>
 
-      {error && <div className="error">{error}</div>}
-      {success && <div className="success">{success}</div>}
+
 
       {activeSection === 'overview' && (
         <div className="dashboard-section">

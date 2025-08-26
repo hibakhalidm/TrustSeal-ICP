@@ -39,6 +39,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity }) => {
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
   
   // Enhanced notification system
   const { 

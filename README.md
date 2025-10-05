@@ -1,10 +1,10 @@
-# 🔐 TrustSeal ICP - WCHL 2025 Optimized Submission
+# 🔐 TrustSeal Hedera - WCHL 2025 Optimized Submission
 
-**TrustSeal ICP** is a production-ready decentralized credential verification system built natively on Internet Computer Protocol (ICP). This hackathon submission demonstrates enterprise-grade blockchain credential management with role-based access control and real-time verification capabilities.
+**TrustSeal Hedera** is a production-ready decentralized credential verification system built on Hedera Hashgraph. This submission demonstrates enterprise-grade credential management with role-based access control and real-time verification, backed by Hedera Token Service (HTS) NFTs for credentials.
 
 ## 🎯 WCHL 2025 Highlights
 
-✅ **Pure ICP Architecture** - Native Motoko smart contracts with React frontend  
+✅ **Hedera Architecture** - Node/Express API integrating `@hashgraph/sdk` with React frontend  
 ✅ **Production-Ready Code** - Professional error handling and comprehensive documentation  
 ✅ **Role-Based System** - Separate dashboards for Admin, Issuer, and Checker workflows  
 ✅ **Real-Time Verification** - Instant credential verification with audit trails  
@@ -13,9 +13,9 @@
 
 ## 🚀 Project Overview
 
-TrustSeal ICP provides a complete decentralized credential ecosystem:
+TrustSeal Hedera provides a complete decentralized credential ecosystem:
 1. **Admin** manages users and system operations with comprehensive oversight
-2. **Universities (Issuers)** mint digital credentials as NFTs on ICP blockchain
+2. **Universities (Issuers)** mint digital credentials as NFTs on Hedera
 3. **Students** own their credentials with privacy-preserving verification capabilities  
 4. **Employers (Checkers)** verify credentials instantly without contacting institutions
 
@@ -24,21 +24,21 @@ This solution eliminates traditional verification delays, reduces costs, prevent
 ## 🎥 Project Videos
 
 ### 📽️ [**Pitch Video**](https://youtu.be/EdLl3TSwqAE)
-Watch our comprehensive project pitch showcasing TrustSeal ICP's vision, architecture, and impact on decentralized credential verification.
+Watch our comprehensive project pitch showcasing TrustSeal Hedera's vision, architecture, and impact on decentralized credential verification.
 
 ### 🎮 [**Demo Video**](https://youtu.be/kE9qLeYLnGo)
-See TrustSeal ICP in action with a complete walkthrough of all user roles, features, and real-time verification capabilities.
+See TrustSeal Hedera in action with a complete walkthrough of all user roles, features, and real-time verification capabilities.
 ## 🏗️ Architecture
 
-TrustSeal ICP uses a clean, ICP-native architecture optimized for production deployment:
+TrustSeal Hedera uses a clean, Hedera-integrated architecture optimized for production deployment:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Internet Computer Protocol                │
+│                        Hedera Hashgraph                      │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌──────────────────┐              ┌──────────────────┐    │
-│  │ TrustSeal Backend│              │ TrustSeal Frontend│    │
-│  │   (Motoko)       │◄────────────►│    (React)       │    │
+│  │ TrustSeal API    │              │ TrustSeal Frontend│    │
+│  │ (Node + SDK)     │◄────────────►│    (React)        │    │
 │  │                  │              │                  │    │
 │  │ • User Management│              │ • Admin Dashboard│    │
 │  │ • NFT Credentials│              │ • Issuer Panel   │    │
@@ -50,47 +50,44 @@ TrustSeal ICP uses a clean, ICP-native architecture optimized for production dep
 
 ### Core Components
 
-- **Motoko Smart Contracts** - Role-based credential management with DIP721 NFT standard
+- **Node/Express API** - Hedera integration using `@hashgraph/sdk` (mint, burn, query)
 - **React Frontend** - Role-specific dashboards with modern UI and real-time notifications
-- **Demo Server** - Express.js server for offline demonstrations and testing
+- **Demo Server** - Express server with Hedera-backed endpoints and in-memory fallbacks
 
 ## 🛠️ Tech Stack
 
 ### Blockchain Backend
-- **Motoko** - ICP-native smart contract language with type safety
-- **DFX SDK** - Internet Computer development framework
-- **Internet Computer Protocol** - Decentralized blockchain platform
-- **DIP721** - NFT standard for credential tokens
+- **Hedera Hashgraph** - Public DLT with predictable fees and fast finality
+- **@hashgraph/sdk** - Official JavaScript SDK for Hedera
+- **HTS (Hedera Token Service)** - NFTs used to represent credentials
 
 ### Frontend
 - **React 18** with **TypeScript** for type-safe component development
 - **Webpack 5** with modern JavaScript bundling and optimization
 - **Custom CSS** with modern design patterns and animations
-- **Internet Identity** integration for decentralized authentication
 
 ### Development & Demo
-- **Express.js** demo server for offline presentations
+- **Express.js** API and demo server
 - **Custom notification system** with React hooks
 - **Responsive design** optimized for all devices
 - **Professional error handling** with graceful fallbacks
 
 ### DevOps
 - **Git** for version control with comprehensive commit history
-- **DFX** for local and mainnet deployment
 - **NPM** for dependency management and build scripts
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **DFX SDK** - Internet Computer development environment
-- **Node.js 18+** - For frontend development and demo server
-- **WSL (Windows)** - Recommended for Windows development
+- **Node.js 18+**
+- **Hedera Testnet account** (operator) with HBAR
+- Optional: Existing HTS NFT token (TokenId) to mint credentials
 
 ### Option 1: Demo Server (Instant Start)
 ```bash
 # Clone the repository
-git clone <https://github.com/hibakhalidm/TrustSeal-ICP>
-cd TrustSeal-ICP
+git clone <https://github.com/hibakhalidm/TrustSeal-Hedera>
+cd TrustSeal-Hedera
 
 # Install dependencies and start demo
 npm install
@@ -99,34 +96,24 @@ npm run demo:dev
 
 **🎯 Demo available at: http://localhost:3001**
 
-### Option 2: Full ICP Deployment
+### Option 2: Configure Hedera
 ```bash
-# Install dependencies
-npm install
-
-# Start local ICP replica
-dfx start --clean --background
-
-# Deploy canisters
-dfx deploy --network local
-
-# Start frontend
-npm run start
+# Copy env template and set credentials
+cp .env.example .env
+# Edit .env with your Hedera operator and NFT token id
 ```
+Then run the demo server again. The server will mint NFTs on Hedera if configured, otherwise it will operate in demo mode.
 
-**🌐 ICP Frontend available at: http://localhost:8080/?canisterId=<frontend-canister-id>**
-
-### Option 3: Mainnet Deployment
-```bash
-# Create secure identity
-dfx identity new trustseal_deploy
-dfx identity use trustseal_deploy
-
-# Deploy to mainnet (requires cycles)
-dfx deploy --network ic
-
-# Get canister URLs
-dfx canister --network ic id trustseal_frontend
+### Hedera Environment Variables
+Create a `.env` file with:
+```
+HEDERA_NETWORK=testnet
+HEDERA_OPERATOR_ID=0.0.xxxxxx
+HEDERA_OPERATOR_KEY=302e020100300506032b657004220420...
+# Optional: pre-existing NFT token to mint credentials on
+HEDERA_NFT_TOKEN_ID=0.0.yyyyyy
+# Optional: burn on revoke (dangerous on mainnet)
+HEDERA_ALLOW_BURN=false
 ```
 
 ## 📖 Role-Based Usage Guide
@@ -155,39 +142,33 @@ dfx canister --network ic id trustseal_frontend
 4. **Export Results** - Download verification results for compliance purposes
 5. **Real-time Status** - Live credential status including revocation checking
 
-## 🔧 Motoko Smart Contract Functions
+## 🔧 API Endpoints
 
-### Admin Functions
-- `initializeAdmin()` - Initialize the first admin user (one-time setup)
-- `registerUser(principal, role, name, org)` - Register new users with roles
-- `verifyUser(principal)` - Verify/approve new users before they can operate
-- `getAllUsers()` - Retrieve all registered users with their status
-- `getSystemStats()` - Get real-time system statistics and metrics
+### Admin
+- `GET /api/admin/stats` - System statistics
+- `GET /api/admin/users` - List users
+- `POST /api/admin/users/verify` - Verify a user
 
-### Issuer Functions  
-- `mint(student_principal, name, type, institution, date)` - Issue new credential NFT
-- `revokeCredential(tokenId, reason)` - Revoke credential with audit trail
-- `getCredentialsByIssuer(issuer)` - Get all credentials issued by specific issuer
-- `getTokensOfUser(user)` - Get all valid (non-revoked) credentials for user
+### Issuer
+- `GET /api/issuer/credentials` - List credentials
+- `POST /api/issuer/mint` - Mint credential (HTS NFT if configured)
+- `POST /api/issuer/revoke` - Revoke credential (optional burn if enabled)
 
-### Checker Functions
-- `verifyCredential(tokenId)` - Instant credential verification with status
-- `getCredentialMetadata(tokenId)` - Get full credential details and metadata
-- `getVerificationHistory()` - Audit trail of all verification activities
+### Checker
+- `GET /api/checker/verify/:tokenId` - Verify credential by ID
+- `GET /api/checker/history` - Sample verification history
 
-### Public Query Functions
-- `getUserRole(principal)` - Get user's role (Admin/Issuer/Checker)
-- `getUserProfile(principal)` - Get complete user profile information
-- `updateLastLogin()` - Update user's last login timestamp for activity tracking
+### Health
+- `GET /api/health` - Server health and Hedera config
+- `GET /api/hedera/info` - Hedera network info
 
 ## 🧪 Demo Features
 
 ### Live Demo Capabilities
-- **Real ICP Integration** - Actual Motoko smart contracts on local/mainnet
-- **Demo Server Mode** - Express.js server with comprehensive mock data for presentations
-- **Internet Identity** - Decentralized authentication (when available)
+- **Hedera Integration** - Use testnet/mainnet with operator credentials
+- **Demo Mode** - In-memory data when no Hedera credentials provided
 - **Role-Based Demo** - Pre-configured users for each role type
-- **Fallback System** - Graceful degradation to demo data when blockchain unavailable
+- **Fallback System** - Graceful degradation when blockchain unavailable
 
 ### Sample Demo Data
 - **Universities**: MIT, Stanford, Harvard (Issuer role)
@@ -198,8 +179,8 @@ dfx canister --network ic id trustseal_frontend
 ## 🔒 Security Features
 
 ### Blockchain Security
-- **Internet Computer Protocol** - Immutable, tamper-proof credential storage
-- **DIP721 NFT Standard** - Standardized token-based credential ownership
+- **Hedera Hashgraph** - Leaderless, aBFT consensus, predictable fees
+- **HTS NFTs** - Token-based credential ownership
 - **Cryptographic Signatures** - Each credential cryptographically signed by issuer
 - **Decentralized Storage** - No single point of failure or central authority
 
@@ -247,14 +228,14 @@ dfx canister --network ic id trustseal_frontend
 - 🚨 **Fraud epidemic** - $1B+ annual losses from credential fraud
 - 🔒 **Privacy invasion** - Full transcripts shared for simple verification
 
-**TrustSeal ICP Solutions:**
+**TrustSeal Hedera Solutions:**
 - ⚡ **Instant verification** - Results in under 1 second
 - 💸 **Cost elimination** - Automated verification at fraction of cost
 - 🛡️ **Fraud prevention** - Immutable blockchain storage prevents forgery
 - 🥷 **Privacy preservation** - Selective disclosure without revealing full records
 
 ### 🚀 Technical Innovation
-1. **Pure ICP Architecture** - Native integration with Internet Computer Protocol
+1. **Hedera Integration** - Integration with Hedera Hashgraph via @hashgraph/sdk
 2. **Production-Ready Code** - Enterprise-grade error handling and documentation
 3. **Role-Based Smart Contracts** - Advanced RBAC implementation in Motoko
 4. **Modern UI/UX** - Professional dashboards with real-time notifications
@@ -262,14 +243,14 @@ dfx canister --network ic id trustseal_frontend
 
 ### 🌟 Unique Differentiators
 - **Complete Ecosystem** - All stakeholders addressed in single platform
-- **Real Blockchain** - Not just a prototype, actual working ICP deployment
+- **Real Blockchain** - Integration with Hedera testnet/mainnet
 - **Professional Quality** - Production-ready code with comprehensive testing
 - **Demo Excellence** - Structured presentation materials and fallback systems
 
 ## 🔮 Roadmap & Future Enhancements
 
 ### 🎯 Immediate (Post-WCHL 2025)
-- **Mainnet Deployment** - Deploy to ICP mainnet with live canister IDs
+- **Mainnet Deployment** - Configure Hedera mainnet operator
 - **Zero-Knowledge Proofs** - Implement full ZK-SNARK integration for privacy
 - **Mobile Application** - React Native app for credential management
 - **QR Code Integration** - Visual credential sharing and verification
@@ -289,16 +270,14 @@ dfx canister --network ic id trustseal_frontend
 ## 🐛 Troubleshooting
 
 ### Common Issues
-1. **DFX not found**: Install DFX SDK or use WSL on Windows
+1. Ensure `.env` variables are set for Hedera (see above)
 2. **Port conflicts**: Ensure ports 3001, 8080, and 4943 are available
 3. **Build failures**: Run `npm install` and check Node.js version (18+)
 4. **WSL path issues**: Use native Windows or cloud development environment
 
 ### Health Checks & URLs
 - **Demo Server**: http://localhost:3001 (Express server)
-- **ICP Local**: http://localhost:4943 (DFX replica)
-- **Frontend Canister**: http://localhost:8080/?canisterId=<canister-id>
-- **DFX Status**: `dfx ping local` (check replica health)
+- **Hedera Testnet**: set via `.env` (HEDERA_NETWORK)
 
 ### Demo Fallback Options
 - **Option 1**: Use demo server (`npm run demo:dev`) for reliable presentations
@@ -311,7 +290,7 @@ dfx canister --network ic id trustseal_frontend
 - **Credential Issuance**: < 3 seconds (including NFT minting)
 - **Dashboard Loading**: < 2 seconds (with real-time data)
 - **Notification Response**: Instant (real-time UI feedback)
-- **Scalability**: 1000+ TPS potential on ICP mainnet
+- **Scalability**: High throughput with Hedera Hashgraph
 
 ## 🤝 Contributing
 

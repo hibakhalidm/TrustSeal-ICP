@@ -1,17 +1,13 @@
 /**
- * TrustSeal ICP Frontend Application
- * 
- * Main application component that handles authentication, user role management,
- * and renders role-specific dashboards for Admin, Issuer, and Checker users.
- * 
- * @author TrustSeal Team
- * @version 1.0.0 - WCHL 2025 Submission
+ * TrustSeal Hedera Frontend Application
+ *
+ * Main application component that renders role-specific dashboards for
+ * Admin, Issuer, and Checker users and communicates with the demo server
+ * which integrates with Hedera Hashgraph.
  */
 
 import React, { useState, useEffect } from 'react';
-import { AuthClient } from '@dfinity/auth-client';
-import { Actor, HttpAgent } from '@dfinity/agent';
-import { Principal } from '@dfinity/principal';
+// Hedera migration: remove ICP SDK imports
 import AdminDashboard from './components/AdminDashboard';
 import IssuerDashboard from './components/IssuerDashboard';
 import CheckerDashboard from './components/CheckerDashboard';
@@ -19,9 +15,9 @@ import './dashboard.css';
 
 // Types
 interface Credential {
-  id: number;
-  owner: Principal;
-  issuer: Principal;
+  id: string; // Hedera NFT id like 0.0.x/serial or demo id
+  owner: string;
+  issuer: string;
   metadata: {
     student_name: string;
     credential_type: string;
@@ -34,7 +30,7 @@ interface Credential {
 }
 
 interface UserProfile {
-  principal: Principal;
+  principal: string;
   role: 'Admin' | 'Issuer' | 'Checker';
   name: string;
   organization: string;
@@ -44,216 +40,131 @@ interface UserProfile {
 }
 
 interface TrustSealActor {
-  // User management
-  initializeAdmin: () => Promise<{ ok?: string; err?: string }>;
-  registerUser: (userPrincipal: Principal, role: any, name: string, organization: string) => Promise<{ ok?: string; err?: string }>;
-  getUserRole: (user: Principal) => Promise<any>;
-  getUserProfile: (user: Principal) => Promise<UserProfile | undefined>;
-  verifyUser: (userPrincipal: Principal) => Promise<{ ok?: string; err?: string }>;
-  updateLastLogin: () => Promise<{ ok?: string; err?: string }>;
+  // User management (server-backed)
   getAllUsers: () => Promise<{ ok?: UserProfile[]; err?: string }>;
   getSystemStats: () => Promise<{ ok?: any; err?: string }>;
+  verifyUser: (userPrincipal: string) => Promise<{ ok?: string; err?: string }>;
   
-  // Credential management
-  mint: (studentPrincipal: Principal, student_name: string, credential_type: string, institution: string, issue_date: string) => Promise<{ ok?: number; err?: string }>;
-  revokeCredential: (tokenId: number, reason: string) => Promise<{ ok?: string; err?: string }>;
-  getTokensOfUser: (user: Principal) => Promise<number[]>;
-  getCredentialsByIssuer: (issuer: Principal) => Promise<Credential[]>;
-  getCredential: (tokenId: number) => Promise<Credential | undefined>;
+  // Credential management (server-backed)
+  mint: (studentPrincipal: string, student_name: string, credential_type: string, institution: string, issue_date: string) => Promise<{ ok?: string; err?: string; credential?: Credential }>;
+  revokeCredential: (tokenId: string, reason: string) => Promise<{ ok?: string; err?: string }>;
   getAllCredentials: () => Promise<Credential[]>;
-  verifyCredential: (tokenId: number) => Promise<{ isValid: boolean; credential: Credential; verificationTimestamp: number } | undefined>;
-  totalSupply: () => Promise<number>;
+  getCredential: (tokenId: string) => Promise<Credential | undefined>;
+  verifyCredential: (tokenId: string) => Promise<{ isValid: boolean; credential: Credential; verificationTimestamp: number } | undefined>;
 }
 
 const App: React.FC = () => {
-  const [authClient, setAuthClient] = useState<AuthClient | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [identity, setIdentity] = useState<any>(null);
+  const [identity, setIdentity] = useState<{ getPrincipal: () => string } | null>(null);
   const [actor, setActor] = useState<TrustSealActor | null>(null);
   const [userRole, setUserRole] = useState<'Admin' | 'Issuer' | 'Checker' | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [isInitializing, setIsInitializing] = useState(true);
+  const [selectedRole, setSelectedRole] = useState<'Admin' | 'Issuer' | 'Checker'>('Issuer');
 
   useEffect(() => {
-    initAuth();
+    // Initialize API actor immediately
+    (async () => {
+      await setupActor();
+      setIsInitializing(false);
+    })();
   }, []);
 
-  const initAuth = async () => {
+  const setupActor = async () => {
     try {
-      const authClient = await AuthClient.create();
-      setAuthClient(authClient);
-      
-      const isAuthenticated = await authClient.isAuthenticated();
-      setIsAuthenticated(isAuthenticated);
-      
-      if (isAuthenticated) {
-        const identity = authClient.getIdentity();
-        setIdentity(identity);
-        await setupActor(identity);
-      }
-    } catch (err) {
-      setError('Failed to initialize authentication');
-      console.error(err);
-    }
-    setIsInitializing(false);
-  };
-
-  const setupActor = async (identity: any) => {
-    try {
-      const agent = new HttpAgent({
-        identity,
-        host: process.env.NODE_ENV === 'development' ? 'http://localhost:4943' : 'https://icp-api.io'
-      });
-
-      // For local development, disable certificate verification
-      if (process.env.NODE_ENV === 'development') {
-        await agent.fetchRootKey();
-      }
-
-      // Enhanced mock actor with role-based functionality
-      const mockActor: TrustSealActor = {
-        // User management functions
-        initializeAdmin: async () => ({ ok: "Admin initialized successfully" }),
-        
-        registerUser: async (userPrincipal, role, name, organization) => {
-          return { ok: "User registered successfully" };
-        },
-        
-        getUserRole: async (user) => {
-          // Mock role detection - in real implementation, this would query the canister
-          const principal = user.toString();
-          if (principal.includes('admin') || principal === identity.getPrincipal().toString()) {
-            return { Admin: null };
-          } else if (principal.includes('issuer') || Math.random() > 0.5) {
-            return { Issuer: null };
-          } else {
-            return { Checker: null };
+      const baseUrl = '';
+      const apiActor: TrustSealActor = {
+        getAllUsers: async () => {
+          try {
+            const res = await fetch(`${baseUrl}/api/admin/users`);
+            const data = await res.json();
+            return { ok: data as UserProfile[] };
+          } catch (e) {
+            return { err: 'Failed to load users' };
           }
         },
-        
-        getUserProfile: async (user) => {
-          return {
-            principal: user,
-            role: 'Issuer',
-            name: 'Demo User',
-            organization: 'Demo Organization',
-            verified: true,
-            registration_date: Date.now() - 86400000,
-            last_login: Date.now() - 3600000
-          };
-        },
-        
-        verifyUser: async (userPrincipal) => ({ ok: "User verified successfully" }),
-        updateLastLogin: async () => ({ ok: "Login updated" }),
-        getAllUsers: async () => ({ ok: [] }),
-        getSystemStats: async () => ({ 
-          ok: {
-            totalCredentials: 45,
-            totalUsers: 12,
-            totalIssuers: 5,
-            totalCheckers: 6,
-            revokedCredentials: 2
+        getSystemStats: async () => {
+          try {
+            const res = await fetch(`${baseUrl}/api/admin/stats`);
+            const data = await res.json();
+            return { ok: data };
+          } catch (e) {
+            return { err: 'Failed to load system stats' };
           }
-        }),
-
-        // Credential management functions
-        mint: async (studentPrincipal, student_name, credential_type, institution, issue_date) => {
-          return { ok: Math.floor(Math.random() * 1000) };
         },
-        
-        revokeCredential: async (tokenId, reason) => ({ ok: "Credential revoked successfully" }),
-        
-        getTokensOfUser: async (user) => [1, 2, 3],
-        
-        getCredentialsByIssuer: async (issuer) => [
-          {
-            id: 1,
-            owner: Principal.fromText('be2us-64aaa-aaaaa-qadbq-cai'),
-            issuer: issuer,
-            metadata: {
-              student_name: 'John Doe',
-              credential_type: 'Bachelor of Science',
-              institution: 'MIT',
-              issue_date: '2023-06-15',
-              revoked: false
-            },
-            issue_timestamp: Date.now() - 86400000
+        verifyUser: async (userPrincipal: string) => {
+          try {
+            const res = await fetch(`${baseUrl}/api/admin/users/verify`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ principal: userPrincipal }),
+            });
+            if (!res.ok) throw new Error('Verify failed');
+            return { ok: 'User verified successfully' };
+          } catch (e) {
+            return { err: 'Failed to verify user' };
           }
-        ],
-        
-        getCredential: async (tokenId) => ({
-          id: tokenId,
-          owner: Principal.fromText('be2us-64aaa-aaaaa-qadbq-cai'),
-          issuer: identity.getPrincipal(),
-          metadata: {
-            student_name: 'John Doe',
-            credential_type: 'Bachelor of Science',
-            institution: 'MIT',
-            issue_date: '2023-06-15',
-            revoked: false
-          },
-          issue_timestamp: Date.now() - 86400000
-        }),
-        
-        getAllCredentials: async () => [
-          {
-            id: 1,
-            owner: Principal.fromText('be2us-64aaa-aaaaa-qadbq-cai'),
-            issuer: identity.getPrincipal(),
-            metadata: {
-              student_name: 'John Doe',
-              credential_type: 'Bachelor of Science',
-              institution: 'MIT',
-              issue_date: '2023-06-15',
-              revoked: false
-            },
-            issue_timestamp: Date.now() - 86400000
-          },
-          {
-            id: 2,
-            owner: Principal.fromText('rdmx6-jaaaa-aaaaa-aaadq-cai'),
-            issuer: identity.getPrincipal(),
-            metadata: {
-              student_name: 'Jane Smith',
-              credential_type: 'Master of Arts',
-              institution: 'Harvard',
-              issue_date: '2023-05-20',
-              revoked: false
-            },
-            issue_timestamp: Date.now() - 172800000
-          }
-        ],
-        
-        verifyCredential: async (tokenId) => {
-          const credential = await mockActor.getCredential(tokenId);
-          return credential ? { 
-            isValid: !credential.metadata.revoked, 
-            credential,
-            verificationTimestamp: Date.now()
-          } : undefined;
         },
-        
-        totalSupply: async () => 45
+        mint: async (_studentPrincipal, student_name, credential_type, institution, issue_date) => {
+          try {
+            const res = await fetch(`${baseUrl}/api/issuer/mint`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ student_name, credential_type, institution, issue_date }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error('Mint failed');
+            return { ok: 'Credential minted', credential: data.credential };
+          } catch (e) {
+            return { err: 'Failed to mint credential' };
+          }
+        },
+        revokeCredential: async (tokenId: string, reason: string) => {
+          try {
+            const res = await fetch(`${baseUrl}/api/issuer/revoke`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tokenId, reason }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error('Revoke failed');
+            return { ok: 'Credential revoked successfully' };
+          } catch (e) {
+            return { err: 'Failed to revoke credential' };
+          }
+        },
+        getAllCredentials: async () => {
+          try {
+            const res = await fetch(`${baseUrl}/api/issuer/credentials`);
+            return await res.json();
+          } catch (e) {
+            return [] as Credential[];
+          }
+        },
+        getCredential: async (tokenId: string) => {
+          try {
+            const res = await fetch(`${baseUrl}/api/checker/verify/${encodeURIComponent(tokenId)}`);
+            if (!res.ok) return undefined;
+            const data = await res.json();
+            return data.credential as Credential;
+          } catch (e) {
+            return undefined;
+          }
+        },
+        verifyCredential: async (tokenId: string) => {
+          try {
+            const res = await fetch(`${baseUrl}/api/checker/verify/${encodeURIComponent(tokenId)}`);
+            if (!res.ok) return undefined;
+            return await res.json();
+          } catch (e) {
+            return undefined;
+          }
+        },
       };
 
-      setActor(mockActor);
-      
-      // Determine user role
-      if (identity) {
-        const roleResult = await mockActor.getUserRole(identity.getPrincipal());
-        if (roleResult?.Admin !== undefined) {
-          setUserRole('Admin');
-        } else if (roleResult?.Issuer !== undefined) {
-          setUserRole('Issuer');
-        } else {
-          setUserRole('Checker');
-        }
-        
-        // Update last login
-        await mockActor.updateLastLogin();
-      }
+      setActor(apiActor);
     } catch (err) {
       setError('Failed to setup actor');
       console.error(err);
@@ -261,25 +172,14 @@ const App: React.FC = () => {
   };
 
   const login = async () => {
-    if (!authClient) return;
-    
     setLoading(true);
     try {
-      await authClient.login({
-        identityProvider: process.env.NODE_ENV === 'development' 
-          ? `http://localhost:4943/?canisterId=${process.env.INTERNET_IDENTITY_CANISTER_ID}`
-          : 'https://identity.ic0.app',
-        onSuccess: async () => {
-          const identity = authClient.getIdentity();
-          setIdentity(identity);
-          setIsAuthenticated(true);
-          await setupActor(identity);
-          setSuccess('Successfully logged in!');
-        },
-        onError: (err) => {
-          setError('Login failed: ' + err);
-        }
-      });
+      // Demo-only identity placeholder
+      const demoIdentity = { getPrincipal: () => 'hedera-demo-operator' };
+      setIdentity(demoIdentity);
+      setIsAuthenticated(true);
+      setUserRole(selectedRole);
+      setSuccess('Connected for demo');
     } catch (err) {
       setError('Login error: ' + String(err));
     }
@@ -287,9 +187,6 @@ const App: React.FC = () => {
   };
 
   const logout = async () => {
-    if (!authClient) return;
-    
-    await authClient.logout();
     setIsAuthenticated(false);
     setIdentity(null);
     setActor(null);
@@ -301,7 +198,7 @@ const App: React.FC = () => {
     return (
       <div className="container">
         <div className="header">
-          <h1>🔐 TrustSeal ICP</h1>
+          <h1>🔐 TrustSeal Hedera</h1>
           <p>Initializing...</p>
         </div>
       </div>
@@ -311,8 +208,8 @@ const App: React.FC = () => {
   return (
     <div className="container">
       <div className="header">
-        <h1>🔐 TrustSeal ICP</h1>
-        <p>Decentralized Credential Verification on Internet Computer</p>
+        <h1>🔐 TrustSeal Hedera</h1>
+        <p>Decentralized Credential Verification on Hedera Hashgraph</p>
         {isAuthenticated && userRole && (
           <p className="role-indicator">
             Logged in as: <span className={`role-badge ${userRole.toLowerCase()}`}>{userRole}</span>
@@ -325,14 +222,22 @@ const App: React.FC = () => {
 
       {!isAuthenticated ? (
         <div className="card">
-          <h2>Connect with Internet Identity</h2>
-          <p>Please authenticate to start using TrustSeal ICP</p>
+          <h2>Connect</h2>
+          <p>Please choose a role to explore the TrustSeal Hedera demo</p>
+          <div className="form-group">
+            <label>Role</label>
+            <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value as any)}>
+              <option value="Admin">Admin</option>
+              <option value="Issuer">Issuer</option>
+              <option value="Checker">Checker</option>
+            </select>
+          </div>
           <button 
             className="btn" 
             onClick={login} 
             disabled={loading}
           >
-            {loading ? 'Connecting...' : 'Connect Wallet'}
+            {loading ? 'Connecting...' : 'Continue'}
           </button>
         </div>
       ) : (
@@ -340,7 +245,7 @@ const App: React.FC = () => {
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <p><strong>Connected:</strong> {identity?.getPrincipal().toString().slice(0, 20)}...</p>
+                <p><strong>Connected:</strong> {identity?.getPrincipal().slice(0, 20)}...</p>
                 <p><strong>Role:</strong> <span className={`role-badge ${userRole?.toLowerCase()}`}>{userRole}</span></p>
               </div>
               <button className="btn" onClick={logout}>Logout</button>

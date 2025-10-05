@@ -266,12 +266,12 @@ const CheckerDashboard: React.FC<CheckerDashboardProps> = ({ actor, identity }) 
           <h3>Verify Credential</h3>
           <form onSubmit={handleVerifyCredential} className="verify-form">
             <div className="form-group">
-              <label>Token ID</label>
+              <label>Credential ID</label>
               <input
-                type="number"
+                type="text"
                 value={verifyTokenId}
                 onChange={(e) => setVerifyTokenId(e.target.value)}
-                placeholder="Enter credential Token ID"
+                placeholder="Enter credential ID (e.g., 0.0.x/serial)"
                 required
               />
             </div>

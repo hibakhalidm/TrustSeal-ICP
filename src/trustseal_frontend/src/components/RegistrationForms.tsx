@@ -111,7 +111,7 @@ const RegistrationForms: React.FC<RegistrationFormsProps> = ({ actor, identity, 
     <div className="registration-container">
       <div className="card">
         <h2>🎓 Register Your Account</h2>
-        <p>Choose your role to get started with TrustSeal ICP</p>
+        <p>Choose your role to get started with TrustSeal Hedera</p>
 
         {!activeForm && (
           <div className="role-selection">

@@ -200,12 +200,12 @@ const IssuerDashboard: React.FC<IssuerDashboardProps> = ({ actor, identity }) =>
           <form onSubmit={handleIssueCredential} className="issue-form">
             <div className="form-row">
               <div className="form-group">
-                <label>Student Principal ID</label>
+                <label>Student Hedera Account ID</label>
                 <input
                   type="text"
                   value={issueForm.studentPrincipal}
                   onChange={(e) => setIssueForm({...issueForm, studentPrincipal: e.target.value})}
-                  placeholder="Student's ICP Principal ID"
+                  placeholder="Student's Hedera Account ID (e.g., 0.0.x)"
                   required
                 />
               </div>

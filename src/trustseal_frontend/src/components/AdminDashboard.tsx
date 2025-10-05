@@ -293,12 +293,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ actor, identity }) => {
           <h3>Register New User</h3>
           <form onSubmit={handleRegisterUser} className="register-form">
             <div className="form-group">
-              <label>User Principal ID</label>
+              <label>User Hedera Account ID</label>
               <input
                 type="text"
                 value={registerForm.userPrincipal}
                 onChange={(e) => setRegisterForm({...registerForm, userPrincipal: e.target.value})}
-                placeholder="Enter user's Principal ID"
+                placeholder="Enter user's Hedera Account ID (e.g., 0.0.x)"
                 required
               />
             </div>

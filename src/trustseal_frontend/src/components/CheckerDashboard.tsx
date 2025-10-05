@@ -1,196 +1,409 @@
+/**
+ * Checker Dashboard Component
+ * 
+ * Provides verification functionality for employers and other verifiers
+ * to authenticate credentials on the Hedera network.
+ * 
+ * @author TrustSeal Team
+ */
+
 import React, { useState, useEffect } from 'react';
 
 interface VerificationResult {
   isValid: boolean;
-  credential: {
-    id: number;
-    owner: string;
-    issuer: string;
-    metadata: {
-      student_name: string;
-      credential_type: string;
-      institution: string;
-      issue_date: string;
-      revoked: boolean;
-      revocation_reason?: string;
-    };
-    issue_timestamp: number;
-  };
+  credential: any;
   verificationTimestamp: number;
-}
-
-interface VerificationHistory {
-  tokenId: number;
-  result: VerificationResult;
-  timestamp: number;
+  onChainOwner: string;
+  metadata: any;
 }
 
 interface CheckerDashboardProps {
-  actor: any;
-  identity: any;
+  hederaService: any;
+  currentAccountId: string;
 }
 
-const CheckerDashboard: React.FC<CheckerDashboardProps> = ({ actor, identity }) => {
-  const [activeSection, setActiveSection] = useState<'overview' | 'verify' | 'history' | 'register'>('register');
-  const [verificationHistory, setVerificationHistory] = useState<VerificationHistory[]>([]);
+const CheckerDashboard: React.FC<CheckerDashboardProps> = ({ hederaService, currentAccountId }) => {
+  const [activeSection, setActiveSection] = useState<'overview' | 'verify' | 'history'>('overview');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [userVerified, setUserVerified] = useState(false);
 
   // Verification form state
-  const [verifyTokenId, setVerifyTokenId] = useState('');
-  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
-
-  // Registration form state
-  const [registerForm, setRegisterForm] = useState({
-    name: '',
-    organization: '',
-    contactEmail: '',
-    description: ''
+  const [verifyForm, setVerifyForm] = useState({
+    tokenId: '',
+    serialNumber: ''
   });
 
-  useEffect(() => {
-    checkUserStatus();
-  }, []);
+  // Verification result
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
 
-  const checkUserStatus = async () => {
-    try {
-      // Mock implementation for demo
-      // In real implementation, check if user is verified
-      setUserVerified(false); // Start with registration needed
-    } catch (err) {
-      console.error('Failed to check user status');
+  // Mock verification history (in production, this would come from the service)
+  const [verificationHistory, setVerificationHistory] = useState([
+    {
+      id: 1,
+      tokenId: '0.0.5001',
+      serialNumber: '1',
+      studentName: 'John Doe',
+      credentialType: 'Bachelor of Computer Science',
+      institution: 'MIT',
+      verificationDate: new Date().toISOString(),
+      result: 'Valid'
+    },
+    {
+      id: 2,
+      tokenId: '0.0.5001',
+      serialNumber: '2',
+      studentName: 'Jane Smith',
+      credentialType: 'Master of Business Administration',
+      institution: 'Stanford University',
+      verificationDate: new Date(Date.now() - 86400000).toISOString(),
+      result: 'Valid'
     }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      // Mock implementation for demo
-      setSuccess('Registration submitted successfully! Please wait for admin approval.');
-      setUserVerified(true);
-      setActiveSection('overview');
-    } catch (err) {
-      setError('Failed to submit registration');
-    }
-    setLoading(false);
-  };
+  ]);
 
   const handleVerifyCredential = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
     setVerificationResult(null);
 
     try {
-      // Mock implementation for demo
-      const mockResult: VerificationResult = {
-        isValid: true,
-        credential: {
-          id: parseInt(verifyTokenId),
-          owner: 'be2us-64aaa-aaaaa-qadbq-cai',
-          issuer: 'rrkah-fqaaa-aaaaa-aaaaq-cai',
-          metadata: {
-            student_name: 'John Doe',
-            credential_type: 'Bachelor of Science',
-            institution: 'Massachusetts Institute of Technology',
-            issue_date: '2023-06-15',
-            revoked: false
-          },
-          issue_timestamp: Date.now() - 86400000
-        },
-        verificationTimestamp: Date.now()
-      };
+      if (!hederaService) {
+        throw new Error('Hedera service not available');
+      }
 
-      setVerificationResult(mockResult);
-      
-      // Add to history
-      const historyEntry: VerificationHistory = {
-        tokenId: parseInt(verifyTokenId),
-        result: mockResult,
-        timestamp: Date.now()
-      };
-      setVerificationHistory(prev => [historyEntry, ...prev]);
-      
-      setVerifyTokenId('');
+      const result = await hederaService.verifyCredential(
+        verifyForm.tokenId,
+        verifyForm.serialNumber
+      );
+
+      if (result.success) {
+        setVerificationResult(result.verification);
+        setSuccess('Credential verification completed!');
+        
+        // Add to history
+        const newHistoryItem = {
+          id: verificationHistory.length + 1,
+          tokenId: verifyForm.tokenId,
+          serialNumber: verifyForm.serialNumber,
+          studentName: result.verification.credential.metadata.studentName,
+          credentialType: result.verification.credential.metadata.credentialType,
+          institution: result.verification.credential.metadata.institution,
+          verificationDate: new Date().toISOString(),
+          result: result.verification.isValid ? 'Valid' : 'Invalid'
+        };
+        
+        setVerificationHistory(prev => [newHistoryItem, ...prev]);
+      } else {
+        setError(result.message || 'Verification failed');
+      }
     } catch (err) {
-      setError('Failed to verify credential');
+      setError('Verification error: ' + String(err));
     }
     setLoading(false);
   };
 
-  if (!userVerified) {
-    return (
-      <div className="checker-dashboard">
-        <div className="dashboard-header">
-          <h2>🔍 Checker Registration</h2>
-          <p>Register your organization to verify credentials</p>
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setVerifyForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleQuickVerify = (tokenId: string, serialNumber: string) => {
+    setVerifyForm({ tokenId, serialNumber });
+    setActiveSection('verify');
+  };
+
+  // Clear messages after 5 seconds
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
+
+  const renderOverview = () => (
+    <div className="dashboard-section">
+      <h2>🔍 Verification Overview</h2>
+      
+      <div className="stats-grid">
+        <div className="stat-card primary">
+          <h3>Total Verifications</h3>
+          <p className="stat-number">{verificationHistory.length}</p>
+          <p className="stat-subtitle">Credentials checked</p>
         </div>
-
-        <div className="dashboard-section">
-          <form onSubmit={handleRegister} className="register-form">
-            <div className="form-group">
-              <label>Organization Name</label>
-              <input
-                type="text"
-                value={registerForm.name}
-                onChange={(e) => setRegisterForm({...registerForm, name: e.target.value})}
-                placeholder="Your company or organization name"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Organization Type</label>
-              <input
-                type="text"
-                value={registerForm.organization}
-                onChange={(e) => setRegisterForm({...registerForm, organization: e.target.value})}
-                placeholder="e.g., Technology Company, HR Agency, Government"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Contact Email</label>
-              <input
-                type="email"
-                value={registerForm.contactEmail}
-                onChange={(e) => setRegisterForm({...registerForm, contactEmail: e.target.value})}
-                placeholder="official@yourcompany.com"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Description</label>
-              <textarea
-                value={registerForm.description}
-                onChange={(e) => setRegisterForm({...registerForm, description: e.target.value})}
-                placeholder="Brief description of your organization and verification needs"
-                rows={3}
-                required
-              />
-            </div>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Submitting...' : '📝 Submit Registration'}
-            </button>
-          </form>
-
-          {error && <div className="error">{error}</div>}
-          {success && <div className="success">{success}</div>}
+        <div className="stat-card success">
+          <h3>Valid Credentials</h3>
+          <p className="stat-number">{verificationHistory.filter(v => v.result === 'Valid').length}</p>
+          <p className="stat-subtitle">Successfully verified</p>
+        </div>
+        <div className="stat-card warning">
+          <h3>Invalid/Revoked</h3>
+          <p className="stat-number">{verificationHistory.filter(v => v.result === 'Invalid').length}</p>
+          <p className="stat-subtitle">Failed verification</p>
+        </div>
+        <div className="stat-card info">
+          <h3>Today's Verifications</h3>
+          <p className="stat-number">
+            {verificationHistory.filter(v => 
+              new Date(v.verificationDate).toDateString() === new Date().toDateString()
+            ).length}
+          </p>
+          <p className="stat-subtitle">Checked today</p>
         </div>
       </div>
-    );
-  }
+
+      <div className="card">
+        <h3>🚀 Quick Actions</h3>
+        <div className="quick-actions">
+          <button 
+            className="action-btn primary"
+            onClick={() => setActiveSection('verify')}
+          >
+            🔍 Verify New Credential
+          </button>
+          <button 
+            className="action-btn secondary"
+            onClick={() => setActiveSection('history')}
+          >
+            📊 View History
+          </button>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>📈 Recent Verifications</h3>
+        {verificationHistory.length > 0 ? (
+          <div className="verification-list">
+            {verificationHistory.slice(0, 5).map((verification) => (
+              <div key={verification.id} className="verification-item">
+                <div className="verification-header">
+                  <h4>{verification.studentName}</h4>
+                  <span className={`status-badge ${verification.result.toLowerCase()}`}>
+                    {verification.result}
+                  </span>
+                </div>
+                <p><strong>Credential:</strong> {verification.credentialType}</p>
+                <p><strong>Institution:</strong> {verification.institution}</p>
+                <p><strong>Verified:</strong> {new Date(verification.verificationDate).toLocaleString()}</p>
+                <button 
+                  className="btn-sm"
+                  onClick={() => handleQuickVerify(verification.tokenId, verification.serialNumber)}
+                >
+                  Re-verify
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>No verifications performed yet.</p>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderVerificationForm = () => (
+    <div className="dashboard-section">
+      <h2>🔍 Verify Credential</h2>
+      
+      <div className="card">
+        <h3>Enter Credential Details</h3>
+        <form onSubmit={handleVerifyCredential}>
+          <div className="form-group">
+            <label htmlFor="tokenId">Token ID</label>
+            <input
+              type="text"
+              id="tokenId"
+              name="tokenId"
+              value={verifyForm.tokenId}
+              onChange={handleInputChange}
+              placeholder="0.0.5001"
+              required
+            />
+            <small>The Hedera Token ID for TrustSeal credentials</small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="serialNumber">Serial Number</label>
+            <input
+              type="text"
+              id="serialNumber"
+              name="serialNumber"
+              value={verifyForm.serialNumber}
+              onChange={handleInputChange}
+              placeholder="Enter credential serial number"
+              required
+            />
+            <small>The unique serial number of the credential NFT</small>
+          </div>
+
+          <button type="submit" className="btn" disabled={loading}>
+            {loading ? 'Verifying...' : 'Verify Credential'}
+          </button>
+        </form>
+
+        <div className="verification-info">
+          <h4>📋 How to Verify:</h4>
+          <ol>
+            <li>Get the Token ID and Serial Number from the credential holder</li>
+            <li>Enter the details in the form above</li>
+            <li>Click "Verify Credential" to check authenticity</li>
+            <li>Review the verification result and details</li>
+          </ol>
+        </div>
+      </div>
+
+      {verificationResult && (
+        <div className="card">
+          <h3>🎯 Verification Result</h3>
+          <div className={`verification-result ${verificationResult.isValid ? 'valid' : 'invalid'}`}>
+            <div className="result-header">
+              <h4>
+                {verificationResult.isValid ? '✅ Valid Credential' : '❌ Invalid/Revoked Credential'}
+              </h4>
+              <span className="verification-timestamp">
+                Verified on: {new Date(verificationResult.verificationTimestamp).toLocaleString()}
+              </span>
+            </div>
+
+            <div className="credential-details">
+              <h5>Credential Information:</h5>
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <span className="label">Student Name:</span>
+                  <span className="value">{verificationResult.metadata.studentName}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Credential Type:</span>
+                  <span className="value">{verificationResult.metadata.credentialType}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Institution:</span>
+                  <span className="value">{verificationResult.metadata.institution}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Issue Date:</span>
+                  <span className="value">{verificationResult.metadata.issueDate}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Current Owner:</span>
+                  <span className="value">{verificationResult.onChainOwner}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Status:</span>
+                  <span className="value">
+                    {verificationResult.metadata.revoked ? 
+                      `Revoked: ${verificationResult.metadata.revocationReason}` : 
+                      'Active'
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="verification-actions">
+              <button 
+                className="btn-secondary"
+                onClick={() => setVerificationResult(null)}
+              >
+                Clear Result
+              </button>
+              <button 
+                className="btn"
+                onClick={() => window.print()}
+              >
+                Print Verification
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderVerificationHistory = () => (
+    <div className="dashboard-section">
+      <h2>📊 Verification History</h2>
+      
+      <div className="card">
+        <div className="history-header">
+          <h3>All Verifications</h3>
+          <div className="history-actions">
+            <button className="btn-secondary">
+              📥 Export CSV
+            </button>
+            <button className="btn-secondary">
+              🔄 Refresh
+            </button>
+          </div>
+        </div>
+
+        {verificationHistory.length > 0 ? (
+          <div className="table-responsive">
+            <table className="verification-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Student</th>
+                  <th>Credential</th>
+                  <th>Institution</th>
+                  <th>Token/Serial</th>
+                  <th>Result</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {verificationHistory.map((verification) => (
+                  <tr key={verification.id}>
+                    <td>{new Date(verification.verificationDate).toLocaleDateString()}</td>
+                    <td>{verification.studentName}</td>
+                    <td>{verification.credentialType}</td>
+                    <td>{verification.institution}</td>
+                    <td>
+                      <div className="token-info">
+                        <div>{verification.tokenId}</div>
+                        <div className="serial">#{verification.serialNumber}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${verification.result.toLowerCase()}`}>
+                        {verification.result}
+                      </span>
+                    </td>
+                    <td>
+                      <button 
+                        className="btn-sm"
+                        onClick={() => handleQuickVerify(verification.tokenId, verification.serialNumber)}
+                      >
+                        Re-verify
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p>No verification history available.</p>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="checker-dashboard">
+    <div className="dashboard">
+      {error && <div className="error">{error}</div>}
+      {success && <div className="success">{success}</div>}
+
       <div className="dashboard-header">
-        <h2>🔍 Checker Dashboard</h2>
-        <p>Credential Verification & Validation</p>
+        <h1>🔍 Checker Dashboard</h1>
+        <p>Verify credentials on Hedera Network</p>
       </div>
 
       <div className="dashboard-nav">
@@ -198,147 +411,27 @@ const CheckerDashboard: React.FC<CheckerDashboardProps> = ({ actor, identity }) 
           className={`nav-btn ${activeSection === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveSection('overview')}
         >
-          📊 Overview
+          🔍 Overview
         </button>
         <button 
           className={`nav-btn ${activeSection === 'verify' ? 'active' : ''}`}
           onClick={() => setActiveSection('verify')}
         >
-          🔍 Verify Credential
+          ✅ Verify Credential
         </button>
         <button 
           className={`nav-btn ${activeSection === 'history' ? 'active' : ''}`}
           onClick={() => setActiveSection('history')}
         >
-          📋 Verification History
+          📊 History
         </button>
       </div>
 
-      {error && <div className="error">{error}</div>}
-      {success && <div className="success">{success}</div>}
-
-      {activeSection === 'overview' && (
-        <div className="dashboard-section">
-          <h3>Verification Overview</h3>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <h4>Total Verifications</h4>
-              <div className="stat-number">{verificationHistory.length}</div>
-            </div>
-            <div className="stat-card">
-              <h4>Valid Credentials</h4>
-              <div className="stat-number">
-                {verificationHistory.filter(v => v.result.isValid).length}
-              </div>
-            </div>
-            <div className="stat-card">
-              <h4>This Month</h4>
-              <div className="stat-number">
-                {verificationHistory.filter(v => 
-                  Date.now() - v.timestamp < 30 * 24 * 60 * 60 * 1000
-                ).length}
-              </div>
-            </div>
-          </div>
-
-          <div className="recent-activity">
-            <h4>Recent Verifications</h4>
-            {verificationHistory.slice(0, 3).map((verification, index) => (
-              <div key={index} className="verification-preview">
-                <div className="verification-info">
-                  <h5>Token ID: {verification.tokenId}</h5>
-                  <p>{verification.result.credential.metadata.student_name}</p>
-                  <span className="institution">{verification.result.credential.metadata.institution}</span>
-                </div>
-                <div className="verification-status">
-                  <span className={`status-badge ${verification.result.isValid ? 'valid' : 'invalid'}`}>
-                    {verification.result.isValid ? 'Valid' : 'Invalid'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {activeSection === 'verify' && (
-        <div className="dashboard-section">
-          <h3>Verify Credential</h3>
-          <form onSubmit={handleVerifyCredential} className="verify-form">
-            <div className="form-group">
-              <label>Token ID</label>
-              <input
-                type="number"
-                value={verifyTokenId}
-                onChange={(e) => setVerifyTokenId(e.target.value)}
-                placeholder="Enter credential Token ID"
-                required
-              />
-            </div>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Verifying...' : '🔍 Verify Credential'}
-            </button>
-          </form>
-
-          {verificationResult && (
-            <div className="verification-result">
-              <h4>Verification Result</h4>
-              <div className={`result-card ${verificationResult.isValid ? 'valid' : 'invalid'}`}>
-                <div className="result-header">
-                  <span className={`status-badge ${verificationResult.isValid ? 'valid' : 'invalid'}`}>
-                    {verificationResult.isValid ? '✅ Valid' : '❌ Invalid'}
-                  </span>
-                  <span className="timestamp">
-                    Verified: {new Date(verificationResult.verificationTimestamp).toLocaleString()}
-                  </span>
-                </div>
-                <div className="result-details">
-                  <p><strong>Student:</strong> {verificationResult.credential.metadata.student_name}</p>
-                  <p><strong>Credential:</strong> {verificationResult.credential.metadata.credential_type}</p>
-                  <p><strong>Institution:</strong> {verificationResult.credential.metadata.institution}</p>
-                  <p><strong>Issue Date:</strong> {verificationResult.credential.metadata.issue_date}</p>
-                  <p><strong>Token ID:</strong> {verificationResult.credential.id}</p>
-                  <p><strong>Owner Principal:</strong> {verificationResult.credential.owner}</p>
-                  <p><strong>Issuer Principal:</strong> {verificationResult.credential.issuer}</p>
-                  {verificationResult.credential.metadata.revoked && (
-                    <p><strong>⚠️ Revocation Reason:</strong> {verificationResult.credential.metadata.revocation_reason}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeSection === 'history' && (
-        <div className="dashboard-section">
-          <h3>Verification History</h3>
-          {verificationHistory.length === 0 ? (
-            <p>No verifications performed yet. Start by verifying a credential!</p>
-          ) : (
-            <div className="history-list">
-              {verificationHistory.map((verification, index) => (
-                <div key={index} className="history-item">
-                  <div className="history-header">
-                    <h4>Token ID: {verification.tokenId}</h4>
-                    <span className="timestamp">
-                      {new Date(verification.timestamp).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="history-details">
-                    <p><strong>Student:</strong> {verification.result.credential.metadata.student_name}</p>
-                    <p><strong>Credential:</strong> {verification.result.credential.metadata.credential_type}</p>
-                    <p><strong>Institution:</strong> {verification.result.credential.metadata.institution}</p>
-                    <span className={`status-badge ${verification.result.isValid ? 'valid' : 'invalid'}`}>
-                      {verification.result.isValid ? 'Valid' : 'Invalid'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="dashboard-content">
+        {activeSection === 'overview' && renderOverview()}
+        {activeSection === 'verify' && renderVerificationForm()}
+        {activeSection === 'history' && renderVerificationHistory()}
+      </div>
     </div>
   );
 };
